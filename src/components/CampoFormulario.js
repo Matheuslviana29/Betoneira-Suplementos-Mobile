@@ -10,6 +10,8 @@ export const CampoFormulario = forwardRef(function CampoFormulario(
     entradaSegura = false,
     erro,
     estilo,
+    estiloEntrada,
+    estiloRecipienteEntrada,
     obrigatorio = false,
     rotulo,
     ...propriedadesEntrada
@@ -22,13 +24,19 @@ export const CampoFormulario = forwardRef(function CampoFormulario(
         {rotulo} {obrigatorio ? <Text style={estilos.obrigatorio}>*</Text> : null}
       </Text>
 
-      <View style={[estilos.recipienteEntrada, erro && estilos.entradaComErro]}>
+      <View
+        style={[
+          estilos.recipienteEntrada,
+          estiloRecipienteEntrada,
+          erro && estilos.entradaComErro,
+        ]}
+      >
         <TextInput
           ref={referencia}
           placeholderTextColor={cores.textoPlaceholder}
           secureTextEntry={entradaSegura}
           selectionColor={cores.laranja}
-          style={estilos.entrada}
+          style={[estilos.entrada, estiloEntrada]}
           {...propriedadesEntrada}
         />
 

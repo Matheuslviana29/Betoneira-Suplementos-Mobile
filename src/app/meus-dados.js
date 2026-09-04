@@ -31,7 +31,7 @@ export default function TelaMeusDados() {
       return;
     }
 
-    roteador.replace('/');
+    roteador.replace('/login');
   };
 
   const salvar = () => {
@@ -120,7 +120,7 @@ export default function TelaMeusDados() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <BarraNavegacaoInferior ativo="perfil" />
+      <BarraNavegacaoInferior />
     </SafeAreaView>
   );
 }

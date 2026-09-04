@@ -3,19 +3,31 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
-export function LogoMarca() {
+export function LogoMarca({ clara = false, compacta = false }) {
   return (
     <View
       accessible
       accessibilityLabel="Betoneira, força e performance"
       style={estilos.recipiente}
     >
-      <View style={estilos.caixaIcone}>
-        <MaterialCommunityIcons color="#FFFFFF" name="dumbbell" size={22} />
+      <View style={[estilos.caixaIcone, compacta && estilos.caixaIconeCompacta]}>
+        <MaterialCommunityIcons
+          color="#FFFFFF"
+          name="dumbbell"
+          size={compacta ? 16 : 22}
+        />
       </View>
 
       <View>
-        <Text style={estilos.nome}>BETONEIRA</Text>
+        <Text
+          style={[
+            estilos.nome,
+            clara && estilos.nomeClaro,
+            compacta && estilos.nomeCompacto,
+          ]}
+        >
+          BETONEIRA
+        </Text>
         <Text style={estilos.slogan}>FORÇA E PERFORMANCE</Text>
       </View>
     </View>
@@ -36,12 +48,24 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
     width: 34,
   },
+  caixaIconeCompacta: {
+    borderRadius: 6,
+    height: 26,
+    width: 26,
+  },
   nome: {
     color: cores.texto,
     fontFamily: fontes.preta,
     fontSize: 21,
     letterSpacing: -0.5,
     lineHeight: 22,
+  },
+  nomeClaro: {
+    color: '#FFFFFF',
+  },
+  nomeCompacto: {
+    fontSize: 19,
+    lineHeight: 20,
   },
   slogan: {
     color: cores.laranja,

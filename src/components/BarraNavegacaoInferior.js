@@ -1,16 +1,42 @@
 import { Feather } from '@expo/vector-icons';
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
 const itens = [
-  { icone: 'home', id: 'inicio', rotulo: 'Início' },
-  { icone: 'grid', id: 'produtos', rotulo: 'Produtos' },
-  { icone: 'shopping-cart', id: 'carrinho', rotulo: 'Carrinho' },
-  { icone: 'user', id: 'perfil', rotulo: 'Perfil' },
+  { destino: '/home', icone: 'home', id: 'inicio', rotulo: 'Início' },
+  {
+    destino: { params: { secao: 'produtos' }, pathname: '/home' },
+    icone: 'grid',
+    id: 'produtos',
+    rotulo: 'Produtos',
+  },
+  { destino: '/pedidos', icone: 'shopping-cart', id: 'carrinho', rotulo: 'Carrinho' },
+  { destino: '/meus-dados', icone: 'user', id: 'perfil', rotulo: 'Perfil' },
 ];
 
-export function BarraNavegacaoInferior({ ativo = 'inicio', aoSelecionar }) {
+const itemAtivoPorRota = {
+  '/home': 'inicio',
+  '/meus-dados': 'perfil',
+  '/pedidos': 'carrinho',
+};
+
+export function BarraNavegacaoInferior() {
+  const caminhoAtual = usePathname();
+  const { secao } = useLocalSearchParams();
+  const roteador = useRouter();
+  const ativo =
+    caminhoAtual === '/home' && secao === 'produtos'
+      ? 'produtos'
+      : itemAtivoPorRota[caminhoAtual];
+
+  const selecionar = (item) => {
+    if (item.id !== ativo) {
+      roteador.navigate(item.destino);
+    }
+  };
+
   return (
     <View accessibilityRole="tablist" style={estilos.barra}>
       {itens.map((item) => {
@@ -23,7 +49,7 @@ export function BarraNavegacaoInferior({ ativo = 'inicio', aoSelecionar }) {
             accessibilityRole="tab"
             accessibilityState={{ selected: estaAtivo }}
             key={item.id}
-            onPress={() => aoSelecionar?.(item.id)}
+            onPress={() => selecionar(item)}
             style={({ pressed }) => [estilos.item, pressed && estilos.itemPressionado]}
           >
             <Feather color={cor} name={item.icone} size={20} />

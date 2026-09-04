@@ -28,7 +28,7 @@ export default function TelaCriarConta() {
       return;
     }
 
-    roteador.replace('/');
+    roteador.replace('/login');
   };
 
   return (

@@ -13,14 +13,18 @@ const itens = [
     rotulo: 'Produtos',
   },
   { destino: '/carrinho', icone: 'shopping-cart', id: 'carrinho', rotulo: 'Carrinho' },
-  { destino: '/meus-dados', icone: 'user', id: 'perfil', rotulo: 'Perfil' },
+  { destino: '/perfil', icone: 'user', id: 'perfil', rotulo: 'Perfil' },
 ];
 
 const itemAtivoPorRota = {
   '/carrinho': 'carrinho',
+  '/alterar-senha': 'perfil',
+  '/endereco-entrega': 'perfil',
   '/forma-pagamento': 'perfil',
   '/home': 'inicio',
   '/meus-dados': 'perfil',
+  '/pedidos': 'perfil',
+  '/perfil': 'perfil',
 };
 
 export function BarraNavegacaoInferior() {

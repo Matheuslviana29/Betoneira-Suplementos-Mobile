@@ -31,7 +31,7 @@ export default function TelaMeusDados() {
       return;
     }
 
-    roteador.replace('/login');
+    roteador.replace('/perfil');
   };
 
   const salvar = () => {

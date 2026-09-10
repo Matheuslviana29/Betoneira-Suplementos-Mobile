@@ -9,14 +9,17 @@ export function CartaoItemCarrinho({
   item,
   precoFormatado,
 }) {
+  const dimensaoImagem = 76 * (item.escalaImagem ?? 1);
+
   return (
     <View style={estilos.cartao}>
       <View style={estilos.recipienteImagem}>
         <Image
           accessibilityIgnoresInvertColors
+          defaultSource={item.imagem}
           resizeMode="contain"
           source={item.imagem}
-          style={[estilos.imagem, { transform: [{ scale: item.escalaImagem }] }]}
+          style={{ height: dimensaoImagem, width: dimensaoImagem }}
         />
       </View>
 
@@ -81,10 +84,6 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
     width: 76,
-  },
-  imagem: {
-    height: '100%',
-    width: '100%',
   },
   conteudo: {
     alignSelf: 'stretch',

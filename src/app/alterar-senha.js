@@ -49,7 +49,7 @@ export default function TelaAlterarSenha() {
             return;
         }
 
-        roteador.replace('/');
+        roteador.replace('/perfil');
     };
 
     const alterarSenha = () => {

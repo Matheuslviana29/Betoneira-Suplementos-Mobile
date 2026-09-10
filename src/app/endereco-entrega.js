@@ -1,15 +1,16 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
+import { BotaoAdicionarTracejado } from '../components/BotaoAdicionarTracejado';
 import { CabecalhoTela } from '../components/CabecalhoTela';
-import { CartaoPedido } from '../components/CartaoPedido';
+import { CartaoEndereco } from '../components/CartaoEndereco';
 import { cores, dimensoes } from '../constants/tema';
-import { pedidosMock } from '../mocks/dadosLoja';
+import { enderecosMock } from '../mocks/dadosEndereco';
 
-export default function TelaPedidos() {
+export default function TelaEnderecoEntrega() {
   const roteador = useRouter();
 
   const voltar = () => {
@@ -21,13 +22,23 @@ export default function TelaPedidos() {
     roteador.replace('/perfil');
   };
 
+  const adicionarEndereco = () => {
+    // Substituir pela abertura do formulário quando ele estiver disponível.
+    Alert.alert('Adicionar endereço', 'O cadastro de um novo endereço será conectado aqui.');
+  };
+
+  const abrirOpcoes = (endereco) => {
+    // As ações poderão consumir a API sem alterar a estrutura visual deste componente.
+    Alert.alert(endereco.apelido, 'As opções deste endereço serão conectadas aqui.');
+  };
+
   return (
     <View style={estilos.tela}>
       <StatusBar backgroundColor={cores.fundo} style="dark" />
 
       <SafeAreaView edges={['top', 'left', 'right']} style={estilos.areaCabecalho}>
         <View style={estilos.conteudoCabecalho}>
-          <CabecalhoTela aoVoltar={voltar} titulo="Pedidos" />
+          <CabecalhoTela aoVoltar={voltar} titulo="Endereços de Entrega" />
         </View>
       </SafeAreaView>
 
@@ -37,10 +48,18 @@ export default function TelaPedidos() {
         showsVerticalScrollIndicator={false}
         style={estilos.rolagem}
       >
-        <View style={estilos.lista}>
-          {pedidosMock.map((pedido) => (
-            <CartaoPedido key={pedido.id} pedido={pedido} />
+        <View style={estilos.conteudo}>
+          {enderecosMock.map((endereco) => (
+            <CartaoEndereco
+              aoAbrirOpcoes={abrirOpcoes}
+              endereco={endereco}
+              key={endereco.id}
+            />
           ))}
+
+          <BotaoAdicionarTracejado aoPressionar={adicionarEndereco}>
+            + Adicionar Novo Endereço
+          </BotaoAdicionarTracejado>
         </View>
       </ScrollView>
 
@@ -73,13 +92,14 @@ const estilos = StyleSheet.create({
   },
   conteudoRolagem: {
     alignItems: 'center',
-    paddingBottom: 20,
+    flexGrow: 1,
+    paddingBottom: 24,
   },
-  lista: {
-    gap: 10,
+  conteudo: {
+    gap: 12,
     maxWidth: dimensoes.larguraMaximaConteudo,
-    paddingHorizontal: 9,
-    paddingTop: 12,
+    paddingHorizontal: 10,
+    paddingTop: 18,
     width: '100%',
   },
   areaNavegacao: {

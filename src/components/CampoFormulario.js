@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import { forwardRef } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { forwardRef, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
@@ -13,11 +13,25 @@ export const CampoFormulario = forwardRef(function CampoFormulario(
     estiloEntrada,
     estiloRecipienteEntrada,
     obrigatorio = false,
+    onBlur,
+    onFocus,
     rotulo,
     ...propriedadesEntrada
   },
   referencia,
 ) {
+  const [emFoco, setEmFoco] = useState(false);
+
+  const aoFocar = (evento) => {
+    setEmFoco(true);
+    onFocus?.(evento);
+  };
+
+  const aoDesfocar = (evento) => {
+    setEmFoco(false);
+    onBlur?.(evento);
+  };
+
   return (
     <View style={[estilos.campo, estilo]}>
       <Text style={estilos.rotulo}>
@@ -28,11 +42,14 @@ export const CampoFormulario = forwardRef(function CampoFormulario(
         style={[
           estilos.recipienteEntrada,
           estiloRecipienteEntrada,
+          emFoco && !erro && estilos.entradaEmFoco,
           erro && estilos.entradaComErro,
         ]}
       >
         <TextInput
           ref={referencia}
+          onBlur={aoDesfocar}
+          onFocus={aoFocar}
           placeholderTextColor={cores.textoPlaceholder}
           secureTextEntry={entradaSegura}
           selectionColor={cores.laranja}
@@ -86,6 +103,10 @@ const estilos = StyleSheet.create({
   entradaComErro: {
     borderColor: cores.erro,
   },
+  entradaEmFoco: {
+    borderColor: cores.laranja,
+    borderWidth: 2,
+  },
   entrada: {
     color: cores.texto,
     flex: 1,
@@ -94,6 +115,11 @@ const estilos = StyleSheet.create({
     height: 48,
     paddingHorizontal: 14,
     paddingVertical: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
   },
   botaoOlho: {
     alignItems: 'center',

@@ -1,12 +1,13 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
+import { BotaoAdicionarTracejado } from '../components/BotaoAdicionarTracejado';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoFormaPagamento } from '../components/CartaoFormaPagamento';
-import { cores, dimensoes, fontes } from '../constants/tema';
+import { cores, dimensoes } from '../constants/tema';
 import { cartoesMock } from '../mocks/dadosPagamento';
 
 export default function TelaFormaPagamento() {
@@ -18,7 +19,7 @@ export default function TelaFormaPagamento() {
       return;
     }
 
-    roteador.replace('/meus-dados');
+    roteador.replace('/perfil');
   };
 
   const adicionarCartao = () => {
@@ -59,16 +60,9 @@ export default function TelaFormaPagamento() {
             />
           ))}
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={adicionarCartao}
-            style={({ pressed }) => [
-              estilos.botaoAdicionar,
-              pressed && estilos.botaoAdicionarPressionado,
-            ]}
-          >
-            <Text style={estilos.textoAdicionar}>+ Adicionar Novo Cartão</Text>
-          </Pressable>
+          <BotaoAdicionarTracejado aoPressionar={adicionarCartao}>
+            + Adicionar Novo Cartão
+          </BotaoAdicionarTracejado>
         </View>
       </ScrollView>
 
@@ -110,24 +104,6 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 18,
     width: '100%',
-  },
-  botaoAdicionar: {
-    alignItems: 'center',
-    backgroundColor: cores.fundo,
-    borderColor: cores.laranja,
-    borderRadius: 8,
-    borderStyle: 'dashed',
-    borderWidth: 1.5,
-    height: 52,
-    justifyContent: 'center',
-  },
-  botaoAdicionarPressionado: {
-    backgroundColor: '#FFF8F2',
-  },
-  textoAdicionar: {
-    color: cores.laranja,
-    fontFamily: fontes.seminegrito,
-    fontSize: 11,
   },
   areaNavegacao: {
     backgroundColor: cores.fundo,

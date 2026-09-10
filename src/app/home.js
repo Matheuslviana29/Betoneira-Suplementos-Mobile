@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   ImageBackground,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -26,6 +27,7 @@ export default function TelaHome() {
   const referenciaRolagem = useRef(null);
   const [categoriaAtiva, setCategoriaAtiva] = useState(categoriasMock[0]);
   const [busca, setBusca] = useState('');
+  const [buscaEmFoco, setBuscaEmFoco] = useState(false);
 
   const produtosVisiveis = produtosMock.filter((produto) =>
     `${produto.nome} ${produto.subtitulo}`.toLocaleLowerCase('pt-BR').includes(
@@ -82,12 +84,14 @@ export default function TelaHome() {
         style={estilos.rolagem}
       >
         <View style={estilos.conteudoPrincipal}>
-          <View style={estilos.busca}>
+          <View style={[estilos.busca, buscaEmFoco && estilos.buscaEmFoco]}>
             <Feather color={cores.textoPlaceholder} name="search" size={20} />
             <TextInput
               accessibilityLabel="Buscar produtos"
               autoCapitalize="none"
+              onBlur={() => setBuscaEmFoco(false)}
               onChangeText={setBusca}
+              onFocus={() => setBuscaEmFoco(true)}
               placeholder="O que você está procurando?"
               placeholderTextColor={cores.textoPlaceholder}
               returnKeyType="search"
@@ -244,13 +248,22 @@ const estilos = StyleSheet.create({
     marginTop: 13,
     paddingHorizontal: 13,
   },
+  buscaEmFoco: {
+    borderColor: cores.laranja,
+    borderWidth: 2,
+  },
   entradaBusca: {
-    color: cores.textoPlaceholder,
+    color: cores.texto,
     flex: 1,
     fontFamily: fontes.regular,
     fontSize: 12,
     height: '100%',
     paddingVertical: 0,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
   },
   banner: {
     aspectRatio: 1855 / 848,

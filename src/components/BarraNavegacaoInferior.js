@@ -12,14 +12,15 @@ const itens = [
     id: 'produtos',
     rotulo: 'Produtos',
   },
-  { destino: '/pedidos', icone: 'shopping-cart', id: 'carrinho', rotulo: 'Carrinho' },
+  { destino: '/carrinho', icone: 'shopping-cart', id: 'carrinho', rotulo: 'Carrinho' },
   { destino: '/meus-dados', icone: 'user', id: 'perfil', rotulo: 'Perfil' },
 ];
 
 const itemAtivoPorRota = {
+  '/carrinho': 'carrinho',
+  '/forma-pagamento': 'perfil',
   '/home': 'inicio',
   '/meus-dados': 'perfil',
-  '/pedidos': 'carrinho',
 };
 
 export function BarraNavegacaoInferior() {
@@ -32,7 +33,10 @@ export function BarraNavegacaoInferior() {
       : itemAtivoPorRota[caminhoAtual];
 
   const selecionar = (item) => {
-    if (item.id !== ativo) {
+    const rotaDestino = typeof item.destino === 'string' ? item.destino : item.destino.pathname;
+    const estaNoDestino = item.id === ativo && caminhoAtual === rotaDestino;
+
+    if (!estaNoDestino) {
       roteador.navigate(item.destino);
     }
   };

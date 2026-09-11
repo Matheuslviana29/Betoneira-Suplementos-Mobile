@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { ItemMenuPerfil } from '../components/ItemMenuPerfil';
@@ -51,6 +52,7 @@ export default function TelaPerfil() {
   };
 
   const sair = () => {
+    Toast.info('Sessão encerrada.');
     roteador.replace('/login');
   };
 

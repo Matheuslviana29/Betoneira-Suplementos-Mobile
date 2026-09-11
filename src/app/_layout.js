@@ -7,8 +7,20 @@ import { Poppins_900Black } from '@expo-google-fonts/poppins/900Black';
 import { useFonts } from '@expo-google-fonts/poppins/useFonts';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import ToastManager from 'toastify-react-native';
 
+import { ToastPersonalizado } from '../components/ToastPersonalizado';
 import { cores } from '../constants/tema';
+
+const renderizarToast = (propriedades) => <ToastPersonalizado {...propriedades} />;
+
+const configuracaoToast = {
+  default: renderizarToast,
+  error: renderizarToast,
+  info: renderizarToast,
+  success: renderizarToast,
+  warn: renderizarToast,
+};
 
 export default function LayoutRaiz() {
   const [fontesCarregadas, erroFontes] = useFonts({
@@ -37,6 +49,14 @@ export default function LayoutRaiz() {
           contentStyle: { backgroundColor: cores.fundo },
           headerShown: false,
         }}
+      />
+      <ToastManager
+        config={configuracaoToast}
+        duration={2400}
+        position="top"
+        showCloseIcon={false}
+        topOffset={44}
+        useModal={false}
       />
     </>
   );

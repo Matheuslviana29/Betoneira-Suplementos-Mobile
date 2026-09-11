@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import { useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Toast } from 'toastify-react-native';
 
 import { BotaoPrincipal } from '../components/BotaoPrincipal';
 import { CampoFormulario } from '../components/CampoFormulario';
@@ -24,9 +25,13 @@ export default function TelaLogin() {
   const entrar = () => {
     const resultado = enviar();
 
-    if (resultado.sucesso) {
-      roteador.replace('/home');
+    if (!resultado.sucesso) {
+      Toast.warn('Revise os campos destacados.');
+      return;
     }
+
+    Toast.success('Login realizado com sucesso.');
+    roteador.replace('/home');
   };
 
   return (

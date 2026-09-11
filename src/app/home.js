@@ -3,7 +3,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
   ImageBackground,
   Platform,
   Pressable,
@@ -14,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { CartaoProduto } from '../components/CartaoProduto';
@@ -36,7 +36,7 @@ export default function TelaHome() {
   );
 
   const adicionarProduto = (produto) => {
-    Alert.alert('Produto adicionado', produto.nome.replace('\n', ' '));
+    Toast.success(`${produto.nome.replace('\n', ' ')} adicionado ao carrinho.`);
   };
 
   const verProdutos = () => {
@@ -102,7 +102,7 @@ export default function TelaHome() {
 
           <ImageBackground
             resizeMode="contain"
-            source={require('../images/banner-academia-v2.png')}
+            source={require('../../assets/images/banner-academia-v2.png')}
             style={estilos.banner}
           >
             <View style={estilos.sombraBanner} />

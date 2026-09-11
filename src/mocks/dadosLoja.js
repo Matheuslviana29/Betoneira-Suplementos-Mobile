@@ -3,7 +3,7 @@ export const categoriasMock = ['Whey', 'Creatina', 'Vitaminas', 'Pré-Treino'];
 export const produtosMock = [
   {
     id: 'whey-chocolate',
-    imagem: require('../images/WheyChocolate-transparente.png'),
+    imagem: require('../../assets/images/WheyChocolate-transparente.png'),
     nome: 'Whey Betoneira\nChocolate 500g',
     preco: 'R$ 119,99',
     escalaImagem: 1,
@@ -11,7 +11,7 @@ export const produtosMock = [
   },
   {
     id: 'creatina-300g',
-    imagem: require('../images/Creatina-transparente.png'),
+    imagem: require('../../assets/images/Creatina-transparente.png'),
     nome: 'Creatina Betoneira\n300g',
     preco: 'R$ 119,99',
     escalaImagem: 1.55,

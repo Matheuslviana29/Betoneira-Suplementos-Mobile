@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -10,6 +9,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { BotaoPrincipal } from '../components/BotaoPrincipal';
@@ -69,11 +69,12 @@ export default function TelaAlterarSenha() {
 
         if (Object.keys(novosErros).length > 0) {
             setErros(novosErros);
+            Toast.warn('Revise os campos destacados.');
             return;
         }
 
         // Substituir pelo envio à API quando a integração estiver disponível.
-        Alert.alert('Senha alterada', 'Sua senha foi alterada com sucesso.');
+        Toast.success('Senha alterada com sucesso.');
         setValores((valoresAtuais) => ({
             ...valoresAtuais,
             novaSenha: '',

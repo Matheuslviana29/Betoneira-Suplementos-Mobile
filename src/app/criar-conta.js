@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { Toast } from 'toastify-react-native';
 
 import { BotaoPrincipal } from '../components/BotaoPrincipal';
 import { CabecalhoTela } from '../components/CabecalhoTela';
@@ -29,6 +30,18 @@ export default function TelaCriarConta() {
     }
 
     roteador.replace('/login');
+  };
+
+  const cadastrar = () => {
+    const resultado = enviar();
+
+    if (!resultado.sucesso) {
+      Toast.warn('Revise os campos destacados.');
+      return;
+    }
+
+    Toast.success('Conta criada com sucesso.');
+    roteador.replace('/home');
   };
 
   return (
@@ -130,7 +143,7 @@ export default function TelaCriarConta() {
           obrigatorio
           rotulo="Criar senha (6 dígitos)"
           onChangeText={(valor) => atualizarCampo('senha', valor.replace(/\D/g, ''))}
-          onSubmitEditing={enviar}
+          onSubmitEditing={cadastrar}
           placeholder="••••••"
           returnKeyType="done"
           value={valores.senha}
@@ -138,7 +151,7 @@ export default function TelaCriarConta() {
       </View>
 
       <View style={estilos.rodape}>
-        <BotaoPrincipal aoPressionar={enviar}>CADASTRAR</BotaoPrincipal>
+        <BotaoPrincipal aoPressionar={cadastrar}>CADASTRAR</BotaoPrincipal>
         <Text style={estilos.textoLegal}>
           Ao cadastrar você concorda com nossos{' '}
           <Text accessibilityRole="link" style={estilos.linkLegal}>

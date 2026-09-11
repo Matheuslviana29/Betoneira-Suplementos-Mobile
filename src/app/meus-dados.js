@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { BotaoPrincipal } from '../components/BotaoPrincipal';
@@ -36,7 +36,7 @@ export default function TelaMeusDados() {
 
   const salvar = () => {
     // Substituir pelo envio à API quando a integração estiver disponível.
-    Alert.alert('Dados salvos', 'As alterações foram salvas localmente.');
+    Toast.success('Dados salvos com sucesso.');
   };
 
   return (

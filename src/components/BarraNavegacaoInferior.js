@@ -18,6 +18,7 @@ const itens = [
 
 const itemAtivoPorRota = {
   '/carrinho': 'carrinho',
+  '/checkout': 'carrinho',
   '/alterar-senha': 'perfil',
   '/endereco-entrega': 'perfil',
   '/forma-pagamento': 'perfil',

@@ -11,25 +11,20 @@ import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoItemCarrinho } from '../components/CartaoItemCarrinho';
 import { cores, dimensoes, fontes } from '../constants/tema';
 import { carrinhoMock } from '../mocks/dadosCarrinho';
-
-const formatadorMoeda = new Intl.NumberFormat('pt-BR', {
-  currency: 'BRL',
-  style: 'currency',
-});
-
-const formatarMoeda = (valor) => formatadorMoeda.format(valor);
+import {
+  calcularResumoCarrinho,
+  formatarMoeda,
+  serializarItensCheckout,
+} from '../utils/carrinho';
 
 export default function TelaCarrinho() {
   const roteador = useRouter();
   const [itens, setItens] = useState(() => carrinhoMock.itens.map((item) => ({ ...item })));
 
-  const quantidadeItens = itens.reduce((total, item) => total + item.quantidade, 0);
-  const subtotal = itens.reduce(
-    (total, item) => total + item.precoUnitario * item.quantidade,
-    0,
+  const { frete, quantidadeItens, subtotal, total } = calcularResumoCarrinho(
+    itens,
+    carrinhoMock.frete,
   );
-  const frete = itens.length > 0 ? carrinhoMock.frete : 0;
-  const total = subtotal + frete;
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -56,7 +51,10 @@ export default function TelaCarrinho() {
   };
 
   const finalizarCompra = () => {
-    roteador.push('/forma-pagamento');
+    roteador.push({
+      params: { itens: serializarItensCheckout(itens) },
+      pathname: '/checkout',
+    });
   };
 
   return (

@@ -10,7 +10,10 @@ export function CartaoProduto({ aoAdicionar, produto }) {
         <Image
           resizeMode="contain"
           source={produto.imagem}
-          style={[estilos.imagem, { transform: [{ scale: produto.escalaImagem }] }]}
+          style={[
+            estilos.imagem,
+            { transform: [{ scale: produto.escalaImagem ?? 1 }] },
+          ]}
         />
       </View>
 

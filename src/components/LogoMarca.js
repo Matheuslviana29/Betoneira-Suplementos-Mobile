@@ -1,34 +1,38 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
-export function LogoMarca({ clara = false, compacta = false }) {
+export function LogoMarca({ ampliada = false, clara = false, compacta = false }) {
   return (
     <View
       accessible
       accessibilityLabel="Betoneira, força e performance"
-      style={estilos.recipiente}
+      style={[estilos.recipiente, ampliada && estilos.recipienteAmpliado]}
     >
-      <View style={[estilos.caixaIcone, compacta && estilos.caixaIconeCompacta]}>
-        <MaterialCommunityIcons
-          color="#FFFFFF"
-          name="dumbbell"
-          size={compacta ? 16 : 22}
-        />
-      </View>
+      <Image
+        resizeMode="contain"
+        source={require('../../assets/images/logo-betoneira.png')}
+        style={[
+          estilos.imagem,
+          ampliada && estilos.imagemAmpliada,
+          compacta && estilos.imagemCompacta,
+        ]}
+      />
 
       <View>
         <Text
           style={[
             estilos.nome,
             clara && estilos.nomeClaro,
+            ampliada && estilos.nomeAmpliado,
             compacta && estilos.nomeCompacto,
           ]}
         >
           BETONEIRA
         </Text>
-        <Text style={estilos.slogan}>FORÇA E PERFORMANCE</Text>
+        <Text style={[estilos.slogan, ampliada && estilos.sloganAmpliado]}>
+          FORÇA E PERFORMANCE
+        </Text>
       </View>
     </View>
   );
@@ -40,17 +44,17 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     gap: 7,
   },
-  caixaIcone: {
-    alignItems: 'center',
-    backgroundColor: cores.laranja,
-    borderRadius: 8,
-    height: 34,
-    justifyContent: 'center',
+  recipienteAmpliado: {
+    gap: 10,
+  },
+  imagem: {
+    aspectRatio: 99 / 95,
     width: 34,
   },
-  caixaIconeCompacta: {
-    borderRadius: 6,
-    height: 26,
+  imagemAmpliada: {
+    width: 48,
+  },
+  imagemCompacta: {
     width: 26,
   },
   nome: {
@@ -63,6 +67,10 @@ const estilos = StyleSheet.create({
   nomeClaro: {
     color: '#FFFFFF',
   },
+  nomeAmpliado: {
+    fontSize: 23,
+    lineHeight: 24,
+  },
   nomeCompacto: {
     fontSize: 19,
     lineHeight: 20,
@@ -73,5 +81,9 @@ const estilos = StyleSheet.create({
     fontSize: 7,
     letterSpacing: 0.45,
     lineHeight: 10,
+  },
+  sloganAmpliado: {
+    fontSize: 8,
+    lineHeight: 11,
   },
 });

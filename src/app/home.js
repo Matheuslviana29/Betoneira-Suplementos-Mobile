@@ -1,60 +1,43 @@
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
 import {
   ImageBackground,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
 
+import { BarraBuscaProdutos } from '../components/BarraBuscaProdutos';
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { CartaoProduto } from '../components/CartaoProduto';
+import { FiltroCategorias } from '../components/FiltroCategorias';
 import { LogoMarca } from '../components/LogoMarca';
 import { cores, dimensoes, fontes } from '../constants/tema';
-import { categoriasMock, produtosMock } from '../mocks/dadosLoja';
+import { useFiltroProdutos } from '../hooks/useFiltroProdutos';
 
 export default function TelaHome() {
   const roteador = useRouter();
-  const { secao } = useLocalSearchParams();
-  const referenciaRolagem = useRef(null);
-  const [categoriaAtiva, setCategoriaAtiva] = useState(categoriasMock[0]);
-  const [busca, setBusca] = useState('');
-  const [buscaEmFoco, setBuscaEmFoco] = useState(false);
-
-  const produtosVisiveis = produtosMock.filter((produto) =>
-    `${produto.nome} ${produto.subtitulo}`.toLocaleLowerCase('pt-BR').includes(
-      busca.trim().toLocaleLowerCase('pt-BR'),
-    ),
-  );
+  const {
+    busca,
+    categoriaAtiva,
+    definirBusca,
+    definirCategoriaAtiva,
+    produtosFiltrados,
+  } = useFiltroProdutos();
+  const produtosVisiveis = produtosFiltrados.slice(0, 2);
 
   const adicionarProduto = (produto) => {
     Toast.success(`${produto.nome.replace('\n', ' ')} adicionado ao carrinho.`);
   };
 
   const verProdutos = () => {
-    referenciaRolagem.current?.scrollToEnd({ animated: true });
+    roteador.push('/produtos');
   };
-
-  useEffect(() => {
-    const quadro = requestAnimationFrame(() => {
-      if (secao === 'produtos') {
-        referenciaRolagem.current?.scrollToEnd({ animated: true });
-        return;
-      }
-
-      referenciaRolagem.current?.scrollTo({ animated: true, y: 0 });
-    });
-
-    return () => cancelAnimationFrame(quadro);
-  }, [secao]);
 
   return (
     <View style={estilos.tela}>
@@ -77,28 +60,17 @@ export default function TelaHome() {
       </SafeAreaView>
 
       <ScrollView
-        ref={referenciaRolagem}
         bounces={false}
         contentContainerStyle={estilos.conteudoRolagem}
         showsVerticalScrollIndicator={false}
         style={estilos.rolagem}
       >
         <View style={estilos.conteudoPrincipal}>
-          <View style={[estilos.busca, buscaEmFoco && estilos.buscaEmFoco]}>
-            <Feather color={cores.textoPlaceholder} name="search" size={20} />
-            <TextInput
-              accessibilityLabel="Buscar produtos"
-              autoCapitalize="none"
-              onBlur={() => setBuscaEmFoco(false)}
-              onChangeText={setBusca}
-              onFocus={() => setBuscaEmFoco(true)}
-              placeholder="O que você está procurando?"
-              placeholderTextColor={cores.textoPlaceholder}
-              returnKeyType="search"
-              style={estilos.entradaBusca}
-              value={busca}
-            />
-          </View>
+          <BarraBuscaProdutos
+            busca={busca}
+            definirBusca={definirBusca}
+            estilo={estilos.busca}
+          />
 
           <ImageBackground
             resizeMode="contain"
@@ -123,35 +95,11 @@ export default function TelaHome() {
           </ImageBackground>
         </View>
 
-        <View style={estilos.faixaCategorias}>
-          <ScrollView
-            contentContainerStyle={estilos.listaCategorias}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          >
-            {categoriasMock.map((categoria) => {
-              const ativa = categoria === categoriaAtiva;
-
-              return (
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: ativa }}
-                  key={categoria}
-                  onPress={() => setCategoriaAtiva(categoria)}
-                  style={({ pressed }) => [
-                    estilos.categoria,
-                    ativa && estilos.categoriaAtiva,
-                    pressed && estilos.pressionado,
-                  ]}
-                >
-                  <Text style={[estilos.textoCategoria, ativa && estilos.textoCategoriaAtiva]}>
-                    {categoria}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
+        <FiltroCategorias
+          categoriaAtiva={categoriaAtiva}
+          definirCategoriaAtiva={definirCategoriaAtiva}
+          estilo={estilos.filtroCategorias}
+        />
 
         <View style={[estilos.conteudoPrincipal, estilos.secaoProdutos]}>
           <View style={estilos.cabecalhoSecao}>
@@ -168,11 +116,9 @@ export default function TelaHome() {
 
           <View style={estilos.gradeProdutos}>
             {produtosVisiveis.map((produto) => (
-              <CartaoProduto
-                aoAdicionar={adicionarProduto}
-                key={produto.id}
-                produto={produto}
-              />
+              <View key={produto.id} style={estilos.colunaProduto}>
+                <CartaoProduto aoAdicionar={adicionarProduto} produto={produto} />
+              </View>
             ))}
           </View>
           {produtosVisiveis.length === 0 && (
@@ -237,33 +183,7 @@ const estilos = StyleSheet.create({
     width: '100%',
   },
   busca: {
-    alignItems: 'center',
-    backgroundColor: cores.fundo,
-    borderColor: cores.borda,
-    borderRadius: 9,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: 9,
-    height: 46,
     marginTop: 13,
-    paddingHorizontal: 13,
-  },
-  buscaEmFoco: {
-    borderColor: cores.laranja,
-    borderWidth: 2,
-  },
-  entradaBusca: {
-    color: cores.texto,
-    flex: 1,
-    fontFamily: fontes.regular,
-    fontSize: 12,
-    height: '100%',
-    paddingVertical: 0,
-    ...Platform.select({
-      web: {
-        outlineStyle: 'none',
-      },
-    }),
   },
   banner: {
     aspectRatio: 1855 / 848,
@@ -307,39 +227,8 @@ const estilos = StyleSheet.create({
     fontSize: 11,
     marginTop: 6,
   },
-  faixaCategorias: {
-    borderBottomColor: cores.laranja,
-    borderBottomWidth: 2,
+  filtroCategorias: {
     marginTop: 6,
-    paddingBottom: 7,
-    paddingTop: 5,
-  },
-  listaCategorias: {
-    gap: 8,
-    paddingHorizontal: 6,
-  },
-  categoria: {
-    backgroundColor: cores.fundo,
-    borderColor: cores.borda,
-    borderRadius: 999,
-    borderWidth: 1,
-    minWidth: 66,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  categoriaAtiva: {
-    backgroundColor: cores.laranja,
-    borderColor: cores.laranja,
-  },
-  textoCategoria: {
-    color: cores.textoSecundario,
-    fontFamily: fontes.regular,
-    fontSize: 10,
-    textAlign: 'center',
-  },
-  textoCategoriaAtiva: {
-    color: '#FFFFFF',
-    fontFamily: fontes.negrito,
   },
   secaoProdutos: {
     paddingTop: 13,
@@ -361,8 +250,12 @@ const estilos = StyleSheet.create({
   },
   gradeProdutos: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
     marginTop: 10,
+  },
+  colunaProduto: {
+    width: '48%',
   },
   semResultados: {
     color: cores.textoSecundario,

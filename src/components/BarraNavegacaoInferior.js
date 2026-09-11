@@ -1,5 +1,5 @@
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, usePathname, useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
@@ -7,7 +7,7 @@ import { cores, fontes } from '../constants/tema';
 const itens = [
   { destino: '/home', icone: 'home', id: 'inicio', rotulo: 'Início' },
   {
-    destino: { params: { secao: 'produtos' }, pathname: '/home' },
+    destino: '/produtos',
     icone: 'grid',
     id: 'produtos',
     rotulo: 'Produtos',
@@ -25,22 +25,16 @@ const itemAtivoPorRota = {
   '/meus-dados': 'perfil',
   '/pedidos': 'perfil',
   '/perfil': 'perfil',
+  '/produtos': 'produtos',
 };
 
 export function BarraNavegacaoInferior() {
   const caminhoAtual = usePathname();
-  const { secao } = useLocalSearchParams();
   const roteador = useRouter();
-  const ativo =
-    caminhoAtual === '/home' && secao === 'produtos'
-      ? 'produtos'
-      : itemAtivoPorRota[caminhoAtual];
+  const ativo = itemAtivoPorRota[caminhoAtual];
 
   const selecionar = (item) => {
-    const rotaDestino = typeof item.destino === 'string' ? item.destino : item.destino.pathname;
-    const estaNoDestino = item.id === ativo && caminhoAtual === rotaDestino;
-
-    if (!estaNoDestino) {
+    if (item.id !== ativo) {
       roteador.navigate(item.destino);
     }
   };

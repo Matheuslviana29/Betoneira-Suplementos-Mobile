@@ -37,7 +37,7 @@ export default function TelaLogin() {
   return (
     <TelaAutenticacao estiloConteudo={estilos.tela}>
       <View style={estilos.recipienteLogo}>
-        <LogoMarca />
+        <LogoMarca ampliada />
       </View>
 
       <View style={estilos.formulario}>

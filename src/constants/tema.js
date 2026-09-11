@@ -1,3 +1,5 @@
+//Guarda valores reutilizáveis como cores, fontes e dimensões.
+
 export const cores = {
   borda: '#E4E7EC',
   erro: '#D92D20',

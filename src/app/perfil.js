@@ -27,7 +27,6 @@ const itensConta = [
     id: 'pagamento',
     rotulo: 'Formas de Pagamento',
   },
-  { icone: 'settings', id: 'configuracoes', rotulo: 'Configurações' },
 ];
 
 const itensSeguranca = [

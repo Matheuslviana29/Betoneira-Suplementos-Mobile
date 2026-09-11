@@ -48,6 +48,11 @@ export const CampoFormulario = forwardRef(function CampoFormulario(
       >
         <TextInput
           ref={referencia}
+          dataSet={
+            Platform.OS === 'web' && aoAlternarEntradaSegura
+              ? { controleSenha: 'personalizado' }
+              : undefined
+          }
           onBlur={aoDesfocar}
           onFocus={aoFocar}
           placeholderTextColor={cores.textoPlaceholder}

@@ -11,6 +11,7 @@ import ToastManager from 'toastify-react-native';
 
 import { ToastPersonalizado } from '../components/ToastPersonalizado';
 import { cores } from '../constants/tema';
+import '../styles/global.css';
 
 const renderizarToast = (propriedades) => <ToastPersonalizado {...propriedades} />;
 

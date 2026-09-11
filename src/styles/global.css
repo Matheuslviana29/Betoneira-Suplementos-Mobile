@@ -1,0 +1,4 @@
+input[data-controle-senha='personalizado']::-ms-clear,
+input[data-controle-senha='personalizado']::-ms-reveal {
+  display: none;
+}

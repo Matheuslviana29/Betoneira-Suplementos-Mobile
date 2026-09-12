@@ -14,7 +14,7 @@ import { dadosUsuarioMock } from '../mocks/dadosUsuario';
 const itensConta = [
   { destino: '/meus-dados', icone: 'user', id: 'dados', rotulo: 'Meus Dados' },
   { destino: '/pedidos', icone: 'package', id: 'pedidos', rotulo: 'Pedidos' },
-  { icone: 'heart', id: 'favoritos', rotulo: 'Favoritos' },
+  { destino: '/favoritos', icone: 'heart', id: 'favoritos', rotulo: 'Favoritos' },
   {
     destino: '/endereco-entrega',
     icone: 'map-pin',

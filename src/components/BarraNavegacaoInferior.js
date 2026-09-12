@@ -21,6 +21,7 @@ const itemAtivoPorRota = {
   '/checkout': 'carrinho',
   '/alterar-senha': 'perfil',
   '/endereco-entrega': 'perfil',
+  '/favoritos': 'perfil',
   '/forma-pagamento': 'perfil',
   '/home': 'inicio',
   '/meus-dados': 'perfil',

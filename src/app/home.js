@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import {
-  ImageBackground,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -72,27 +72,18 @@ export default function TelaHome() {
             estilo={estilos.busca}
           />
 
-          <ImageBackground
-            resizeMode="contain"
-            source={require('../../assets/images/banner-academia-v2.png')}
-            style={estilos.banner}
+          <Pressable
+            accessibilityLabel="Ver ofertas da semana"
+            accessibilityRole="button"
+            onPress={verProdutos}
+            style={({ pressed }) => [estilos.banner, pressed && estilos.pressionado]}
           >
-            <View style={estilos.sombraBanner} />
-            <View style={estilos.conteudoBanner}>
-              <View style={estilos.seloOferta}>
-                <Text style={estilos.textoSelo}>OFERTAS DA SEMANA</Text>
-              </View>
-              <Text style={estilos.tituloBanner}>CONSTRUA SUA MELHOR{`\n`}VERSÃO</Text>
-              <Pressable
-                accessibilityRole="button"
-                hitSlop={8}
-                onPress={verProdutos}
-                style={({ pressed }) => pressed && estilos.pressionado}
-              >
-                <Text style={estilos.linkBanner}>Ver Ofertas</Text>
-              </Pressable>
-            </View>
-          </ImageBackground>
+            <Image
+              resizeMode="cover"
+              source={require('../../assets/images/promo-banner.png')}
+              style={estilos.imagemBanner}
+            />
+          </Pressable>
         </View>
 
         <FiltroCategorias
@@ -186,46 +177,16 @@ const estilos = StyleSheet.create({
     marginTop: 13,
   },
   banner: {
-    aspectRatio: 1855 / 848,
+    aspectRatio: 358 / 160,
     backgroundColor: cores.marinho,
     borderRadius: 13,
     marginTop: 14,
     overflow: 'hidden',
     width: '100%',
   },
-  sombraBanner: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.16)',
-  },
-  conteudoBanner: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 17,
-  },
-  seloOferta: {
-    alignSelf: 'flex-start',
-    backgroundColor: cores.laranja,
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  textoSelo: {
-    color: '#FFFFFF',
-    fontFamily: fontes.negrito,
-    fontSize: 8,
-  },
-  tituloBanner: {
-    color: '#FFFFFF',
-    fontFamily: fontes.extranegrito,
-    fontSize: 18,
-    lineHeight: 20,
-    marginTop: 8,
-  },
-  linkBanner: {
-    color: cores.laranja,
-    fontFamily: fontes.negrito,
-    fontSize: 11,
-    marginTop: 6,
+  imagemBanner: {
+    height: '100%',
+    width: '100%',
   },
   filtroCategorias: {
     marginTop: 6,

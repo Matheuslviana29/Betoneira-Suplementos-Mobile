@@ -69,9 +69,11 @@ export default function TelaLogin() {
           value={valores.senha}
         />
 
-        <Pressable accessibilityRole="button" hitSlop={8} style={estilos.botaoEsqueciSenha}>
-          <Text style={estilos.linkLaranja}>Esqueci minha senha</Text>
-        </Pressable>
+        <Link href="/esqueci-senha" asChild>
+          <Pressable hitSlop={8} style={estilos.botaoEsqueciSenha}>
+            <Text style={estilos.linkLaranja}>Esqueci minha senha</Text>
+          </Pressable>
+        </Link>
       </View>
 
       <View style={estilos.rodape}>

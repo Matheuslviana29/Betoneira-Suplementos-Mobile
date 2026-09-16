@@ -55,6 +55,8 @@ export const esquemaLogin = z.object({
   senha: z.string().min(1, 'Informe sua senha.'),
 });
 
+export const esquemaRecuperacaoSenha = z.object({ email: esquemaEmail });
+
 export const esquemaCadastro = z.object({
   nomeCompleto: z
     .string()

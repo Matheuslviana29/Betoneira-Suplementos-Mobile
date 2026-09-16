@@ -24,7 +24,7 @@ Com Node.js e npm instalados, execute na pasta do projeto:
 
 ```bash
 npm install
-npm start
+npx expo start -c
 ```
 
 No menu do Expo, escolha Android, iOS ou web. Também é possível iniciar diretamente com `npm run android`, `npm run ios` ou `npm run web`.

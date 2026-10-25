@@ -6,11 +6,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoPedido } from '../components/CartaoPedido';
-import { cores, dimensoes } from '../constants/tema';
-import { pedidosMock } from '../mocks/dadosLoja';
+import { cores, dimensoes, fontes } from '../constants/tema';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { adaptarPedido } from '../utils/dadosApi';
+
+const carregarPedidos = async () => (await api.pedidos.listar()).map(adaptarPedido);
 
 export default function TelaPedidos() {
   const roteador = useRouter();
+  const { dados: pedidos, erro } = useConsultaAoFocar(carregarPedidos, []);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -38,9 +43,12 @@ export default function TelaPedidos() {
         style={estilos.rolagem}
       >
         <View style={estilos.lista}>
-          {pedidosMock.map((pedido) => (
+          {pedidos.map((pedido) => (
             <CartaoPedido key={pedido.id} pedido={pedido} />
           ))}
+          {pedidos.length === 0 ? (
+            <Text style={estilos.vazio}>{erro ?? 'Você ainda não possui pedidos.'}</Text>
+          ) : null}
         </View>
       </ScrollView>
 
@@ -81,6 +89,13 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 9,
     paddingTop: 12,
     width: '100%',
+  },
+  vazio: {
+    color: cores.textoSecundario,
+    fontFamily: fontes.regular,
+    fontSize: 11,
+    paddingTop: 48,
+    textAlign: 'center',
   },
   areaNavegacao: {
     backgroundColor: cores.fundo,

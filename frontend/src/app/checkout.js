@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
@@ -12,29 +12,39 @@ import { CabecalhoTela } from '../components/CabecalhoTela';
 import { ItemResumoCheckout } from '../components/ItemResumoCheckout';
 import { SecaoCheckout } from '../components/SecaoCheckout';
 import { cores, dimensoes, fontes } from '../constants/tema';
-import { carrinhoMock } from '../mocks/dadosCarrinho';
-import { enderecosMock } from '../mocks/dadosEndereco';
-import { cartoesMock } from '../mocks/dadosPagamento';
-import {
-  calcularResumoCarrinho,
-  formatarMoeda,
-  reconstruirItensCheckout,
-} from '../utils/carrinho';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { formatarMoeda } from '../utils/carrinho';
+import { adaptarCarrinho, adaptarEndereco, adaptarPagamento } from '../utils/dadosApi';
 
-const enderecoPadrao =
-  enderecosMock.find((endereco) => endereco.id === 'endereco-trabalho') ?? enderecosMock[0];
-const cartaoPadrao =
-  cartoesMock.find((cartao) => cartao.id === 'cartao-visa-4321') ?? cartoesMock[0];
+const estadoInicial = {
+  carrinho: {
+    itens: [],
+    resumo: { freteCentavos: 0, quantidadeItens: 0, subtotalCentavos: 0, totalCentavos: 0 },
+  },
+  endereco: null,
+  pagamento: null,
+};
+
+async function carregarCheckout() {
+  const [cart, addresses, payments] = await Promise.all([
+    api.carrinho.obter(),
+    api.enderecos.listar(),
+    api.pagamentos.listar(),
+  ]);
+  return {
+    carrinho: adaptarCarrinho(cart),
+    endereco: addresses[0] ? adaptarEndereco(addresses[0]) : null,
+    pagamento: payments[0] ? adaptarPagamento(payments[0]) : null,
+  };
+}
 
 export default function TelaCheckout() {
   const roteador = useRouter();
-  const { itens: parametroItens } = useLocalSearchParams();
-  const itensSerializados = Array.isArray(parametroItens) ? parametroItens[0] : parametroItens;
-  const itens = useMemo(
-    () => reconstruirItensCheckout(carrinhoMock.itens, itensSerializados),
-    [itensSerializados],
-  );
-  const resumo = calcularResumoCarrinho(itens, carrinhoMock.frete);
+  const { dados, erro } = useConsultaAoFocar(carregarCheckout, estadoInicial);
+  const [confirmando, setConfirmando] = useState(false);
+  const { carrinho, endereco, pagamento } = dados;
+  const { itens, resumo } = carrinho;
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -45,9 +55,17 @@ export default function TelaCheckout() {
     roteador.replace('/carrinho');
   };
 
-  const confirmarPedido = () => {
-    Toast.success('Pedido realizado com sucesso.');
-    roteador.replace('/pedidos');
+  const confirmarPedido = async () => {
+    try {
+      setConfirmando(true);
+      await api.pedidos.criar({ enderecoId: endereco.id, formaPagamentoId: pagamento.id });
+      Toast.success('Pedido realizado com sucesso.');
+      roteador.replace('/pedidos');
+    } catch (error) {
+      Toast.error(error.message);
+    } finally {
+      setConfirmando(false);
+    }
   };
 
   return (
@@ -78,8 +96,10 @@ export default function TelaCheckout() {
                 <Feather color={cores.laranja} name="map-pin" size={18} />
               </View>
               <View style={estilos.dadosOpcao}>
-                <Text style={estilos.tituloOpcao}>{enderecoPadrao.apelido}</Text>
-                <Text style={estilos.descricaoOpcao}>{enderecoPadrao.enderecoCompleto}</Text>
+                <Text style={estilos.tituloOpcao}>{endereco?.apelido ?? 'Nenhum endereço'}</Text>
+                <Text style={estilos.descricaoOpcao}>
+                  {endereco?.enderecoCompleto ?? 'Cadastre um endereço para continuar.'}
+                </Text>
               </View>
             </View>
           </SecaoCheckout>
@@ -94,10 +114,14 @@ export default function TelaCheckout() {
               </View>
               <View style={estilos.dadosOpcao}>
                 <Text style={estilos.tituloOpcao}>
-                  {cartaoPadrao.bandeira} •••• {cartaoPadrao.ultimosDigitos}
+                  {pagamento
+                    ? `${pagamento.bandeira} •••• ${pagamento.ultimosDigitos}`
+                    : 'Nenhuma forma de pagamento'}
                 </Text>
                 <Text style={estilos.descricaoOpcao}>
-                  Validade: {cartaoPadrao.validade}
+                  {pagamento
+                    ? `Validade: ${pagamento.validade}`
+                    : 'Cadastre uma forma de pagamento para continuar.'}
                 </Text>
               </View>
             </View>
@@ -111,6 +135,7 @@ export default function TelaCheckout() {
               </View>
             ))}
           </SecaoCheckout>
+          {erro ? <Text style={estilos.instrucao}>{erro}</Text> : null}
         </View>
       </ScrollView>
 
@@ -118,18 +143,24 @@ export default function TelaCheckout() {
         <View style={estilos.confirmacao}>
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloResumo}>Subtotal</Text>
-            <Text style={estilos.valorResumo}>{formatarMoeda(resumo.subtotal)}</Text>
+            <Text style={estilos.valorResumo}>
+              {formatarMoeda(resumo.subtotalCentavos / 100)}
+            </Text>
           </View>
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloResumo}>Frete</Text>
-            <Text style={estilos.valorResumo}>{formatarMoeda(resumo.frete)}</Text>
+            <Text style={estilos.valorResumo}>{formatarMoeda(resumo.freteCentavos / 100)}</Text>
           </View>
           <View style={estilos.divisor} />
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloTotal}>Total</Text>
-            <Text style={estilos.valorTotal}>{formatarMoeda(resumo.total)}</Text>
+            <Text style={estilos.valorTotal}>{formatarMoeda(resumo.totalCentavos / 100)}</Text>
           </View>
-          <BotaoPrincipal desabilitado={itens.length === 0} aoPressionar={confirmarPedido}>
+          <BotaoPrincipal
+            carregando={confirmando}
+            desabilitado={itens.length === 0 || !endereco || !pagamento}
+            aoPressionar={confirmarPedido}
+          >
             CONFIRMAR PEDIDO
           </BotaoPrincipal>
         </View>

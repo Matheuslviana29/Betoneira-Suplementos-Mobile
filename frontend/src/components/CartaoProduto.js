@@ -3,7 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
-export function CartaoProduto({ aoAdicionar, produto }) {
+export function CartaoProduto({ aoAdicionar, aoFavoritar, produto }) {
   return (
     <View style={estilos.cartao}>
       <View style={estilos.recipienteImagem}>
@@ -15,6 +15,15 @@ export function CartaoProduto({ aoAdicionar, produto }) {
             { transform: [{ scale: produto.escalaImagem ?? 1 }] },
           ]}
         />
+        <Pressable
+          accessibilityLabel={`Favoritar ${produto.nome}`}
+          accessibilityRole="button"
+          hitSlop={8}
+          onPress={() => aoFavoritar(produto)}
+          style={({ pressed }) => [estilos.botaoFavorito, pressed && estilos.botaoPressionado]}
+        >
+          <Feather color={cores.laranja} name="heart" size={16} />
+        </Pressable>
       </View>
 
       <View style={estilos.conteudo}>
@@ -56,10 +65,22 @@ const estilos = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
     paddingTop: 8,
+    position: 'relative',
   },
   imagem: {
     height: '100%',
     width: '100%',
+  },
+  botaoFavorito: {
+    alignItems: 'center',
+    backgroundColor: cores.fundo,
+    borderRadius: 15,
+    height: 28,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 7,
+    top: 7,
+    width: 28,
   },
   conteudo: {
     flex: 1,

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Toast } from 'toastify-react-native';
 
@@ -9,11 +9,14 @@ import { CampoFormulario } from '../components/CampoFormulario';
 import { SeletorGenero } from '../components/SeletorGenero';
 import { TelaAutenticacao } from '../components/TelaAutenticacao';
 import { cores, fontes } from '../constants/tema';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
 import { useFormularioCadastro } from '../hooks/useFormularioCadastro';
 
 export default function TelaCriarConta() {
   const roteador = useRouter();
+  const { cadastrar: cadastrarUsuario } = useAutenticacao();
   const referenciaEmail = useRef(null);
+  const [enviando, setEnviando] = useState(false);
   const {
     alternarVisibilidadeSenha,
     atualizarCampo,
@@ -32,7 +35,7 @@ export default function TelaCriarConta() {
     roteador.replace('/login');
   };
 
-  const cadastrar = () => {
+  const cadastrar = async () => {
     const resultado = enviar();
 
     if (!resultado.sucesso) {
@@ -40,8 +43,16 @@ export default function TelaCriarConta() {
       return;
     }
 
-    Toast.success('Conta criada com sucesso.');
-    roteador.replace('/home');
+    try {
+      setEnviando(true);
+      await cadastrarUsuario(resultado.dados);
+      Toast.success('Conta criada com sucesso.');
+      roteador.replace('/home');
+    } catch (error) {
+      Toast.error(error.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -138,20 +149,19 @@ export default function TelaCriarConta() {
           autoComplete="new-password"
           entradaSegura={!senhaVisivel}
           erro={erros.senha}
-          keyboardType="number-pad"
-          maxLength={6}
+          maxLength={72}
           obrigatorio
-          rotulo="Criar senha (6 dígitos)"
-          onChangeText={(valor) => atualizarCampo('senha', valor.replace(/\D/g, ''))}
+          rotulo="Criar senha"
+          onChangeText={(valor) => atualizarCampo('senha', valor)}
           onSubmitEditing={cadastrar}
-          placeholder="••••••"
+          placeholder="Mínimo de 8 caracteres"
           returnKeyType="done"
           value={valores.senha}
         />
       </View>
 
       <View style={estilos.rodape}>
-        <BotaoPrincipal aoPressionar={cadastrar}>CADASTRAR</BotaoPrincipal>
+        <BotaoPrincipal carregando={enviando} aoPressionar={cadastrar}>CADASTRAR</BotaoPrincipal>
         <Text style={estilos.textoLegal}>
           Ao cadastrar você concorda com nossos{' '}
           <Text accessibilityRole="link" style={estilos.linkLegal}>

@@ -2,16 +2,22 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { BotaoAdicionarTracejado } from '../components/BotaoAdicionarTracejado';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoFormaPagamento } from '../components/CartaoFormaPagamento';
 import { cores, dimensoes } from '../constants/tema';
-import { cartoesMock } from '../mocks/dadosPagamento';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { adaptarPagamento } from '../utils/dadosApi';
+
+const carregarPagamentos = async () => (await api.pagamentos.listar()).map(adaptarPagamento);
 
 export default function TelaFormaPagamento() {
   const roteador = useRouter();
+  const { dados: cartoes, erro, recarregar } = useConsultaAoFocar(carregarPagamentos, []);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -22,16 +28,27 @@ export default function TelaFormaPagamento() {
     roteador.replace('/perfil');
   };
 
-  const adicionarCartao = () => {
-    // Substituir pela abertura do formulário de cartão quando ele estiver disponível.
-    Alert.alert('Adicionar cartão', 'O cadastro de um novo cartão será conectado aqui.');
-  };
+  const adicionarCartao = () => roteador.push('/nova-forma-pagamento');
 
   const abrirOpcoes = (cartao) => {
-    // As ações poderão consumir a API sem alterar a estrutura visual deste componente.
     Alert.alert(
       `${cartao.bandeira} final ${cartao.ultimosDigitos}`,
-      'As opções deste cartão serão conectadas aqui.',
+      'Deseja remover esta forma de pagamento?',
+      [
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.pagamentos.remover(cartao.id);
+              await recarregar();
+            } catch (error) {
+              Toast.error(error.message);
+            }
+          },
+        },
+        { text: 'Cancelar', style: 'cancel' },
+      ],
     );
   };
 
@@ -52,13 +69,15 @@ export default function TelaFormaPagamento() {
         style={estilos.rolagem}
       >
         <View style={estilos.conteudo}>
-          {cartoesMock.map((cartao) => (
+          {cartoes.map((cartao) => (
             <CartaoFormaPagamento
               aoAbrirOpcoes={abrirOpcoes}
               cartao={cartao}
               key={cartao.id}
             />
           ))}
+
+          {erro ? <BotaoAdicionarTracejado aoPressionar={recarregar}>{erro}</BotaoAdicionarTracejado> : null}
 
           <BotaoAdicionarTracejado aoPressionar={adicionarCartao}>
             + Adicionar Novo Cartão

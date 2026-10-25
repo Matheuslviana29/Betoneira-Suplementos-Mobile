@@ -1,7 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
@@ -10,11 +9,16 @@ import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoProdutoFavorito } from '../components/CartaoProdutoFavorito';
 import { cores, dimensoes, fontes } from '../constants/tema';
-import { favoritosMock } from '../mocks/dadosFavoritos';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { adaptarProduto } from '../utils/dadosApi';
+
+const carregarFavoritos = async () => (await api.favoritos.listar()).map(adaptarProduto);
 
 export default function TelaFavoritos() {
   const roteador = useRouter();
-  const [favoritos, setFavoritos] = useState(() => [...favoritosMock]);
+  const { carregando, dados: favoritos, erro, setDados: setFavoritos } =
+    useConsultaAoFocar(carregarFavoritos, []);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -25,15 +29,23 @@ export default function TelaFavoritos() {
     roteador.replace('/perfil');
   };
 
-  const adicionarProduto = (produto) => {
-    Toast.success(`${produto.nome.replace('\n', ' ')} adicionado ao carrinho.`);
+  const adicionarProduto = async (produto) => {
+    try {
+      await api.carrinho.adicionar(produto.id);
+      Toast.success(`${produto.nome} adicionado ao carrinho.`);
+    } catch (error) {
+      Toast.error(error.message);
+    }
   };
 
-  const removerFavorito = (produto) => {
-    setFavoritos((favoritosAtuais) =>
-      favoritosAtuais.filter((favorito) => favorito.id !== produto.id),
-    );
-    Toast.info(`${produto.nome.replace('\n', ' ')} removido dos favoritos.`);
+  const removerFavorito = async (produto) => {
+    try {
+      await api.favoritos.remover(produto.id);
+      setFavoritos((items) => items.filter((item) => item.id !== produto.id));
+      Toast.info(`${produto.nome} removido dos favoritos.`);
+    } catch (error) {
+      Toast.error(error.message);
+    }
   };
 
   return (
@@ -63,12 +75,12 @@ export default function TelaFavoritos() {
             </View>
           ))}
 
-          {favoritos.length === 0 && (
+          {!carregando && favoritos.length === 0 && (
             <View style={estilos.estadoVazio}>
               <Feather color={cores.textoPlaceholder} name="heart" size={38} />
               <Text style={estilos.tituloVazio}>Nenhum favorito ainda</Text>
               <Text style={estilos.textoVazio}>
-                Os produtos que você favoritar aparecerão aqui.
+                {erro ?? 'Os produtos que você favoritar aparecerão aqui.'}
               </Text>
             </View>
           )}

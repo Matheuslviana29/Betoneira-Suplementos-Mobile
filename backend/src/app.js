@@ -1,19 +1,48 @@
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 
-import { apiRouter } from './routes/index.js';
+import { env } from './config/env.js';
+import { createControllers } from './controllers/index.js';
+import { AppError } from './errors/app-error.js';
+import { createAuthenticationMiddleware } from './middlewares/authenticate.js';
+import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
+import { createRepositories } from './repositories/index.js';
+import { createApiRouter } from './routes/index.js';
+import { createServices } from './services/index.js';
 
-export const app = express();
+export function createApp({ database, sessionDurationDays = env.sessionDurationDays }) {
+  const app = express();
+  const repositories = createRepositories(database);
+  const services = createServices({ database, repositories, sessionDurationDays });
+  const controllers = createControllers(services);
+  const authenticate = createAuthenticationMiddleware(services.auth);
 
-app.disable('x-powered-by');
-app.use(express.json());
-app.use('/api', apiRouter);
+  app.disable('x-powered-by');
+  app.use(helmet());
+  app.use(
+    cors({
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      origin(origin, callback) {
+        const allowed =
+          !origin || env.corsOrigins.includes('*') || env.corsOrigins.includes(origin);
+        callback(
+          allowed
+            ? null
+            : new AppError('Origem não permitida pelo CORS.', {
+                statusCode: 403,
+                code: 'ORIGEM_NAO_PERMITIDA',
+              }),
+          allowed,
+        );
+      },
+    }),
+  );
+  app.use(express.json({ limit: '100kb' }));
+  app.use('/api', createApiRouter({ controllers, authenticate }));
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
-app.use((request, response) => {
-  response.status(404).json({ message: 'Rota não encontrada.' });
-});
-
-app.use((error, request, response, next) => {
-  console.error(error);
-  response.status(500).json({ message: 'Erro interno do servidor.' });
-});
+  return app;
+}
 

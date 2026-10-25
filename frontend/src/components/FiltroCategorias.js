@@ -1,9 +1,8 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
-import { categoriasMock } from '../mocks/dadosLoja';
 
-export function FiltroCategorias({ categoriaAtiva, definirCategoriaAtiva, estilo }) {
+export function FiltroCategorias({ categorias, categoriaAtiva, definirCategoriaAtiva, estilo }) {
   return (
     <View style={[estilos.faixa, estilo]}>
       <ScrollView
@@ -11,7 +10,7 @@ export function FiltroCategorias({ categoriaAtiva, definirCategoriaAtiva, estilo
         horizontal
         showsHorizontalScrollIndicator={false}
       >
-        {categoriasMock.map((categoria) => {
+        {categorias.map((categoria) => {
           const ativa = categoria === categoriaAtiva;
 
           return (

@@ -72,12 +72,6 @@ export function useFormularioCadastro() {
 
     definirErros({});
 
-    // Conecte a chamada da API de cadastro usando resultado.data.
-    console.log('Cadastro pronto para envio', {
-      ...resultado.data,
-      senha: '[oculta]',
-    });
-
     return { dados: resultado.data, sucesso: true };
   }, [valores]);
 

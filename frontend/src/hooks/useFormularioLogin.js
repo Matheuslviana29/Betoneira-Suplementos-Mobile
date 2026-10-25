@@ -28,9 +28,6 @@ export function useFormularioLogin() {
 
     definirErros({});
 
-    // Conecte a chamada da API de autenticação usando resultado.data.
-    console.log('Login pronto para envio', { email: resultado.data.email });
-
     return { dados: resultado.data, sucesso: true };
   }, [valores]);
 

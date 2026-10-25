@@ -2,16 +2,22 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Toast } from 'toastify-react-native';
 
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { BotaoAdicionarTracejado } from '../components/BotaoAdicionarTracejado';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoEndereco } from '../components/CartaoEndereco';
 import { cores, dimensoes } from '../constants/tema';
-import { enderecosMock } from '../mocks/dadosEndereco';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { adaptarEndereco } from '../utils/dadosApi';
+
+const carregarEnderecos = async () => (await api.enderecos.listar()).map(adaptarEndereco);
 
 export default function TelaEnderecoEntrega() {
   const roteador = useRouter();
+  const { dados: enderecos, erro, recarregar } = useConsultaAoFocar(carregarEnderecos, []);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -22,14 +28,35 @@ export default function TelaEnderecoEntrega() {
     roteador.replace('/perfil');
   };
 
-  const adicionarEndereco = () => {
-    // Substituir pela abertura do formulário quando ele estiver disponível.
-    Alert.alert('Adicionar endereço', 'O cadastro de um novo endereço será conectado aqui.');
-  };
+  const adicionarEndereco = () => roteador.push('/novo-endereco');
 
   const abrirOpcoes = (endereco) => {
-    // As ações poderão consumir a API sem alterar a estrutura visual deste componente.
-    Alert.alert(endereco.apelido, 'As opções deste endereço serão conectadas aqui.');
+    Alert.alert(endereco.apelido, endereco.enderecoCompleto, [
+      {
+        text: 'Tornar principal',
+        onPress: async () => {
+          try {
+            await api.enderecos.atualizar(endereco.id, { padrao: true });
+            await recarregar();
+          } catch (error) {
+            Toast.error(error.message);
+          }
+        },
+      },
+      {
+        text: 'Excluir',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await api.enderecos.remover(endereco.id);
+            await recarregar();
+          } catch (error) {
+            Toast.error(error.message);
+          }
+        },
+      },
+      { text: 'Cancelar', style: 'cancel' },
+    ]);
   };
 
   return (
@@ -49,13 +76,15 @@ export default function TelaEnderecoEntrega() {
         style={estilos.rolagem}
       >
         <View style={estilos.conteudo}>
-          {enderecosMock.map((endereco) => (
+          {enderecos.map((endereco) => (
             <CartaoEndereco
               aoAbrirOpcoes={abrirOpcoes}
               endereco={endereco}
               key={endereco.id}
             />
           ))}
+
+          {erro ? <BotaoAdicionarTracejado aoPressionar={recarregar}>{erro}</BotaoAdicionarTracejado> : null}
 
           <BotaoAdicionarTracejado aoPressionar={adicionarEndereco}>
             + Adicionar Novo Endereço

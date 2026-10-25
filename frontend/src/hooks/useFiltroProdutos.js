@@ -1,30 +1,42 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { categoriasMock, produtosMock } from '../mocks/dadosLoja';
+import { api } from '../services/api';
+import { adaptarProduto } from '../utils/dadosApi';
 
 export function useFiltroProdutos() {
-  const [busca, setBusca] = useState('');
-  const [categoriaAtiva, setCategoriaAtiva] = useState(categoriasMock[0]);
+  const [busca, definirBusca] = useState('');
+  const [categoriaAtiva, definirCategoriaAtiva] = useState('Tudo');
+  const [categorias, setCategorias] = useState(['Tudo']);
+  const [erro, setErro] = useState();
+  const [produtos, setProdutos] = useState([]);
+
+  useEffect(() => {
+    Promise.all([api.catalogo.categorias(), api.catalogo.produtos()])
+      .then(([categories, products]) => {
+        setCategorias(['Tudo', ...categories.map((category) => category.nome)]);
+        setProdutos(products.map(adaptarProduto));
+      })
+      .catch((error) => setErro(error.message));
+  }, []);
 
   const produtosFiltrados = useMemo(() => {
     const termoBusca = busca.trim().toLocaleLowerCase('pt-BR');
-
-    return produtosMock.filter((produto) => {
+    return produtos.filter((produto) => {
       const correspondeCategoria =
         categoriaAtiva === 'Tudo' || produto.categoria === categoriaAtiva;
       const textoProduto = `${produto.nome} ${produto.subtitulo} ${produto.categoria}`
         .toLocaleLowerCase('pt-BR');
-      const correspondeBusca = !termoBusca || textoProduto.includes(termoBusca);
-
-      return correspondeCategoria && correspondeBusca;
+      return correspondeCategoria && (!termoBusca || textoProduto.includes(termoBusca));
     });
-  }, [busca, categoriaAtiva]);
+  }, [busca, categoriaAtiva, produtos]);
 
   return {
     busca,
+    categorias,
     categoriaAtiva,
-    definirBusca: setBusca,
-    definirCategoriaAtiva: setCategoriaAtiva,
+    definirBusca,
+    definirCategoriaAtiva,
+    erro,
     produtosFiltrados,
   };
 }

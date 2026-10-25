@@ -1,38 +1,48 @@
 # Betoneira Suplementos
 
-Aplicativo de loja de suplementos desenvolvido com React Native, Expo e Expo Router. O projeto apresenta a navegação e os principais fluxos de uma loja, usando dados simulados.
-
-> **Projeto em andamento:** telas, funcionalidades e estrutura estão sujeitos a alterações. As operações de login, recuperação de senha, cadastro e compra são simulações; não há envio de e-mail, pagamento ou persistência em um servidor.
-
-## Funcionalidades
-
-- Login, cadastro e tela de recuperação de senha com validação de formulários.
-- Página inicial com banner de ofertas e produtos em destaque.
-- Catálogo com busca e filtro por categoria.
-- Lista de favoritos e carrinho com ajuste de quantidades e resumo do pedido.
-- Checkout com endereço e forma de pagamento simulados.
-- Área do perfil com dados pessoais, pedidos, endereços, formas de pagamento e alteração de senha.
-- Avisos e confirmações exibidos por toast.
-
-## Tecnologias
-
-React Native, Expo, Expo Router, Zod e Toastify React Native.
+Aplicativo de loja de suplementos desenvolvido com React Native, Expo e Expo Router. O frontend consome a API REST do projeto para autenticação, catálogo, favoritos, carrinho, perfil, endereços, formas de pagamento e pedidos. Apenas a recuperação de senha continua simulada.
 
 ## Como executar
 
-Com Node.js e npm instalados, execute na pasta do projeto:
+Use dois terminais. No primeiro, inicie o backend:
 
 ```bash
-npm install
+cd backend
+npm run db:seed
+npm start
+```
+
+O `db:seed` só precisa ser executado para popular ou restaurar os dados iniciais. Ele é seguro para ser executado novamente.
+
+No segundo terminal, inicie o Expo:
+
+```bash
+cd frontend
 npx expo start -c
 ```
 
-No menu do Expo, escolha Android, iOS ou web. Também é possível iniciar diretamente com `npm run android`, `npm run ios` ou `npm run web`.
+Para testar no navegador, pressione `w` no terminal do Expo ou execute `npm run web`. O endereço padrão da API é `http://localhost:3333/api/v1`.
+
+### Celular físico
+
+Crie `frontend/.env.local` e substitua `SEU_IP` pelo IP local do computador:
+
+```env
+EXPO_PUBLIC_API_URL=http://SEU_IP:3333/api/v1
+```
+
+O celular e o computador devem estar na mesma rede. Inclua a origem exibida pelo Expo em `CORS_ORIGINS` no arquivo `backend/.env` se o navegador informar bloqueio de CORS.
 
 ## Estrutura principal
 
-- `src/app/`: telas e rotas do aplicativo.
+- `src/app/`: telas e rotas.
 - `src/components/`: componentes de interface.
-- `src/hooks/`: lógica reutilizável dos formulários e filtros.
-- `src/mocks/`: dados simulados de produtos, usuário, pedidos, carrinho e pagamentos.
+- `src/contextos/`: sessão e autenticação compartilhadas.
+- `src/hooks/`: consultas e lógica reutilizável.
+- `src/services/`: comunicação com a API e armazenamento seguro da sessão.
 - `src/schemas/`: validação dos formulários.
+- `src/utils/`: adaptação e formatação dos dados da API.
+
+## Observação sobre pagamentos
+
+O cadastro atual armazena somente bandeira, quatro últimos dígitos e validade para permitir o teste do checkout. Nenhum número completo de cartão ou código de segurança é armazenado. A tokenização será integrada ao Mercado Pago em uma etapa futura.

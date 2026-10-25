@@ -1,5 +1,5 @@
 import { Link, useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Toast } from 'toastify-react-native';
 
@@ -8,11 +8,14 @@ import { CampoFormulario } from '../components/CampoFormulario';
 import { LogoMarca } from '../components/LogoMarca';
 import { TelaAutenticacao } from '../components/TelaAutenticacao';
 import { cores, fontes } from '../constants/tema';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
 import { useFormularioLogin } from '../hooks/useFormularioLogin';
 
 export default function TelaLogin() {
   const roteador = useRouter();
+  const { entrar: autenticar } = useAutenticacao();
   const referenciaSenha = useRef(null);
+  const [enviando, setEnviando] = useState(false);
   const {
     alternarVisibilidadeSenha,
     atualizarCampo,
@@ -22,7 +25,7 @@ export default function TelaLogin() {
     valores,
   } = useFormularioLogin();
 
-  const entrar = () => {
+  const entrar = async () => {
     const resultado = enviar();
 
     if (!resultado.sucesso) {
@@ -30,8 +33,16 @@ export default function TelaLogin() {
       return;
     }
 
-    Toast.success('Login realizado com sucesso.');
-    roteador.replace('/home');
+    try {
+      setEnviando(true);
+      await autenticar(resultado.dados);
+      Toast.success('Login realizado com sucesso.');
+      roteador.replace('/home');
+    } catch (error) {
+      Toast.error(error.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -77,7 +88,7 @@ export default function TelaLogin() {
       </View>
 
       <View style={estilos.rodape}>
-        <BotaoPrincipal aoPressionar={entrar}>ENTRAR</BotaoPrincipal>
+        <BotaoPrincipal carregando={enviando} aoPressionar={entrar}>ENTRAR</BotaoPrincipal>
         <View style={estilos.linhaConta}>
           <Text style={estilos.textoSecundario}>Ainda não tem conta? </Text>
           <Link href="/criar-conta" asChild>

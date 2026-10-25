@@ -5,12 +5,14 @@ import { Poppins_700Bold } from '@expo-google-fonts/poppins/700Bold';
 import { Poppins_800ExtraBold } from '@expo-google-fonts/poppins/800ExtraBold';
 import { Poppins_900Black } from '@expo-google-fonts/poppins/900Black';
 import { useFonts } from '@expo-google-fonts/poppins/useFonts';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import ToastManager from 'toastify-react-native';
 
 import { ToastPersonalizado } from '../components/ToastPersonalizado';
 import { cores } from '../constants/tema';
+import { AutenticacaoProvider, useAutenticacao } from '../contextos/AutenticacaoContext';
 import '../styles/global.css';
 
 const renderizarToast = (propriedades) => <ToastPersonalizado {...propriedades} />;
@@ -22,6 +24,23 @@ const configuracaoToast = {
   success: renderizarToast,
   warn: renderizarToast,
 };
+
+function GuardiaoRotas() {
+  const { autenticado, carregando } = useAutenticacao();
+  const roteador = useRouter();
+  const segmentos = useSegments();
+
+  useEffect(() => {
+    if (carregando) return;
+    const rota = segmentos[0];
+    const publica = !rota || ['login', 'criar-conta', 'esqueci-senha'].includes(rota);
+
+    if (!autenticado && !publica) roteador.replace('/login');
+    if (autenticado && publica) roteador.replace('/home');
+  }, [autenticado, carregando, roteador, segmentos]);
+
+  return null;
+}
 
 export default function LayoutRaiz() {
   const [fontesCarregadas, erroFontes] = useFonts({
@@ -42,7 +61,8 @@ export default function LayoutRaiz() {
   }
 
   return (
-    <>
+    <AutenticacaoProvider>
+      <GuardiaoRotas />
       <StatusBar backgroundColor={cores.fundo} style="dark" />
       <Stack
         screenOptions={{
@@ -59,6 +79,6 @@ export default function LayoutRaiz() {
         topOffset={44}
         useModal={false}
       />
-    </>
+    </AutenticacaoProvider>
   );
 }

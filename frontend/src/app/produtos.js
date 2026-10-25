@@ -12,19 +12,36 @@ import { FiltroCategorias } from '../components/FiltroCategorias';
 import { LogoMarca } from '../components/LogoMarca';
 import { cores, dimensoes, fontes } from '../constants/tema';
 import { useFiltroProdutos } from '../hooks/useFiltroProdutos';
+import { api } from '../services/api';
 
 export default function TelaProdutos() {
   const roteador = useRouter();
   const {
     busca,
+    categorias,
     categoriaAtiva,
     definirBusca,
     definirCategoriaAtiva,
+    erro,
     produtosFiltrados,
   } = useFiltroProdutos();
 
-  const adicionarProduto = (produto) => {
-    Toast.success(`${produto.nome.replace('\n', ' ')} adicionado ao carrinho.`);
+  const adicionarProduto = async (produto) => {
+    try {
+      await api.carrinho.adicionar(produto.id);
+      Toast.success(`${produto.nome} adicionado ao carrinho.`);
+    } catch (error) {
+      Toast.error(error.message);
+    }
+  };
+
+  const favoritarProduto = async (produto) => {
+    try {
+      await api.favoritos.adicionar(produto.id);
+      Toast.success(`${produto.nome} adicionado aos favoritos.`);
+    } catch (error) {
+      Toast.error(error.message);
+    }
   };
 
   return (
@@ -51,6 +68,7 @@ export default function TelaProdutos() {
           <BarraBuscaProdutos busca={busca} definirBusca={definirBusca} />
         </View>
         <FiltroCategorias
+          categorias={categorias}
           categoriaAtiva={categoriaAtiva}
           definirCategoriaAtiva={definirCategoriaAtiva}
         />
@@ -65,13 +83,17 @@ export default function TelaProdutos() {
         <View style={[estilos.conteudoLimitado, estilos.grade]}>
           {produtosFiltrados.map((produto) => (
             <View key={produto.id} style={estilos.colunaProduto}>
-              <CartaoProduto aoAdicionar={adicionarProduto} produto={produto} />
+              <CartaoProduto
+                aoAdicionar={adicionarProduto}
+                aoFavoritar={favoritarProduto}
+                produto={produto}
+              />
             </View>
           ))}
         </View>
 
         {produtosFiltrados.length === 0 && (
-          <Text style={estilos.semResultados}>Nenhum produto encontrado.</Text>
+          <Text style={estilos.semResultados}>{erro ?? 'Nenhum produto encontrado.'}</Text>
         )}
       </ScrollView>
 

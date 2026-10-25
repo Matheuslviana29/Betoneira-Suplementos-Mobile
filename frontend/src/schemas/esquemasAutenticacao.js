@@ -88,7 +88,11 @@ export const esquemaCadastro = z.object({
   genero: z.enum(['masculino', 'feminino', 'outro'], {
     error: 'Selecione uma opção de gênero.',
   }),
-  senha: z.string().regex(/^\d{6}$/, 'A senha deve conter exatamente 6 dígitos.'),
+  senha: z
+    .string()
+    .min(8, 'Use ao menos 8 caracteres, com letras e números.')
+    .max(72, 'A senha deve ter no máximo 72 caracteres.')
+    .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, 'Use ao menos 8 caracteres, com letras e números.'),
 });
 
 export function obterErrosPorCampo(erroZod) {

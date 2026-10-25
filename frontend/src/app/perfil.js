@@ -9,7 +9,7 @@ import { Toast } from 'toastify-react-native';
 import { BarraNavegacaoInferior } from '../components/BarraNavegacaoInferior';
 import { ItemMenuPerfil } from '../components/ItemMenuPerfil';
 import { cores, dimensoes, fontes } from '../constants/tema';
-import { dadosUsuarioMock } from '../mocks/dadosUsuario';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
 
 const itensConta = [
   { destino: '/meus-dados', icone: 'user', id: 'dados', rotulo: 'Meus Dados' },
@@ -35,6 +35,7 @@ const itensSeguranca = [
 
 export default function TelaPerfil() {
   const roteador = useRouter();
+  const { sair: encerrarSessao, usuario } = useAutenticacao();
   const versao = Constants.expoConfig?.version ?? '1.0.0';
 
   const abrirItem = (item) => {
@@ -50,7 +51,8 @@ export default function TelaPerfil() {
     Alert.alert('Foto de perfil', 'A seleção de uma foto será conectada aqui.');
   };
 
-  const sair = () => {
+  const sair = async () => {
+    await encerrarSessao();
     Toast.info('Sessão encerrada.');
     roteador.replace('/login');
   };
@@ -99,8 +101,8 @@ export default function TelaPerfil() {
                 </Pressable>
               </View>
 
-              <Text style={estilos.nome}>{dadosUsuarioMock.nomeCompleto}</Text>
-              <Text style={estilos.email}>{dadosUsuarioMock.email}</Text>
+              <Text style={estilos.nome}>{usuario?.nomeCompleto}</Text>
+              <Text style={estilos.email}>{usuario?.email}</Text>
             </View>
 
             {renderizarGrupo(itensConta)}

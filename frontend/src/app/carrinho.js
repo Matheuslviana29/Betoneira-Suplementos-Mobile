@@ -1,7 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -10,21 +9,29 @@ import { BotaoPrincipal } from '../components/BotaoPrincipal';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CartaoItemCarrinho } from '../components/CartaoItemCarrinho';
 import { cores, dimensoes, fontes } from '../constants/tema';
-import { carrinhoMock } from '../mocks/dadosCarrinho';
-import {
-  calcularResumoCarrinho,
-  formatarMoeda,
-  serializarItensCheckout,
-} from '../utils/carrinho';
+import { useConsultaAoFocar } from '../hooks/useConsultaAoFocar';
+import { api } from '../services/api';
+import { formatarMoeda } from '../utils/carrinho';
+import { adaptarCarrinho, adaptarEndereco, formatarCep } from '../utils/dadosApi';
+
+const carrinhoVazio = {
+  itens: [],
+  resumo: { freteCentavos: 0, quantidadeItens: 0, subtotalCentavos: 0, totalCentavos: 0 },
+};
+
+async function carregarCarrinho() {
+  const [cart, addresses] = await Promise.all([api.carrinho.obter(), api.enderecos.listar()]);
+  return {
+    ...adaptarCarrinho(cart),
+    endereco: addresses[0] ? adaptarEndereco(addresses[0]) : null,
+  };
+}
 
 export default function TelaCarrinho() {
   const roteador = useRouter();
-  const [itens, setItens] = useState(() => carrinhoMock.itens.map((item) => ({ ...item })));
-
-  const { frete, quantidadeItens, subtotal, total } = calcularResumoCarrinho(
-    itens,
-    carrinhoMock.frete,
-  );
+  const { dados: carrinho, erro, setDados: setCarrinho } =
+    useConsultaAoFocar(carregarCarrinho, carrinhoVazio);
+  const { itens, resumo } = carrinho;
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -35,27 +42,19 @@ export default function TelaCarrinho() {
     roteador.replace('/home');
   };
 
-  const alterarQuantidade = (id, diferenca) => {
-    setItens((itensAtuais) =>
-      itensAtuais
-        .map((item) =>
-          item.id === id ? { ...item, quantidade: item.quantidade + diferenca } : item,
-        )
-        .filter((item) => item.quantidade > 0),
-    );
+  const alterarQuantidade = async (item, diferenca) => {
+    try {
+      const quantidade = item.quantidade + diferenca;
+      const result = quantidade > 0
+        ? await api.carrinho.alterar(item.produtoId, quantidade)
+        : await api.carrinho.remover(item.produtoId);
+      setCarrinho((current) => ({ ...adaptarCarrinho(result), endereco: current.endereco }));
+    } catch (error) {
+      Alert.alert('Carrinho', error.message);
+    }
   };
 
-  const alterarCep = () => {
-    // Substituir pela seleção de endereço quando a integração estiver disponível.
-    Alert.alert('Alterar CEP', 'A edição do endereço será conectada à próxima etapa.');
-  };
-
-  const finalizarCompra = () => {
-    roteador.push({
-      params: { itens: serializarItensCheckout(itens) },
-      pathname: '/checkout',
-    });
-  };
+  const finalizarCompra = () => roteador.push('/checkout');
 
   return (
     <View style={estilos.tela}>
@@ -67,7 +66,7 @@ export default function TelaCarrinho() {
             <CabecalhoTela aoVoltar={voltar} titulo="Meu Carrinho" />
           </View>
           <Text style={estilos.totalItens}>
-            {quantidadeItens} {quantidadeItens === 1 ? 'item' : 'itens'}
+            {resumo.quantidadeItens} {resumo.quantidadeItens === 1 ? 'item' : 'itens'}
           </Text>
         </View>
       </SafeAreaView>
@@ -81,8 +80,8 @@ export default function TelaCarrinho() {
         <View style={estilos.conteudo}>
           {itens.map((item) => (
             <CartaoItemCarrinho
-              aoAdicionar={() => alterarQuantidade(item.id, 1)}
-              aoDiminuir={() => alterarQuantidade(item.id, -1)}
+              aoAdicionar={() => alterarQuantidade(item, 1)}
+              aoDiminuir={() => alterarQuantidade(item, -1)}
               item={item}
               key={item.id}
               precoFormatado={formatarMoeda(item.precoUnitario * item.quantidade)}
@@ -93,7 +92,9 @@ export default function TelaCarrinho() {
             <View style={estilos.carrinhoVazio}>
               <Feather color={cores.textoPlaceholder} name="shopping-cart" size={36} />
               <Text style={estilos.tituloVazio}>Seu carrinho está vazio</Text>
-              <Text style={estilos.textoVazio}>Adicione produtos para continuar a compra.</Text>
+              <Text style={estilos.textoVazio}>
+                {erro ?? 'Adicione produtos para continuar a compra.'}
+              </Text>
             </View>
           )}
 
@@ -101,12 +102,14 @@ export default function TelaCarrinho() {
             <View style={estilos.endereco}>
               <Feather color={cores.textoSecundario} name="truck" size={15} />
               <Text numberOfLines={1} style={estilos.textoEndereco}>
-                CEP: {carrinhoMock.cep} ({carrinhoMock.endereco})
+                {carrinho.endereco
+                  ? `CEP: ${formatarCep(carrinho.endereco.cep)} (${carrinho.endereco.logradouro})`
+                  : 'Cadastre um endereço para calcular a entrega'}
               </Text>
             </View>
             <Pressable
               accessibilityRole="button"
-              onPress={alterarCep}
+              onPress={() => roteador.push('/endereco-entrega')}
               style={({ pressed }) => [
                 estilos.botaoAlterar,
                 pressed && estilos.botaoAlterarPressionado,
@@ -122,21 +125,28 @@ export default function TelaCarrinho() {
         <View style={estilos.resumo}>
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloResumo}>Subtotal</Text>
-            <Text style={estilos.valorResumo}>{formatarMoeda(subtotal)}</Text>
+            <Text style={estilos.valorResumo}>
+              {formatarMoeda(resumo.subtotalCentavos / 100)}
+            </Text>
           </View>
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloResumo}>Frete Estimado</Text>
-            <Text style={estilos.valorResumo}>{formatarMoeda(frete)}</Text>
+            <Text style={estilos.valorResumo}>
+              {formatarMoeda(resumo.freteCentavos / 100)}
+            </Text>
           </View>
 
           <View style={estilos.divisor} />
 
           <View style={estilos.linhaResumo}>
             <Text style={estilos.rotuloTotal}>Total</Text>
-            <Text style={estilos.valorTotal}>{formatarMoeda(total)}</Text>
+            <Text style={estilos.valorTotal}>{formatarMoeda(resumo.totalCentavos / 100)}</Text>
           </View>
 
-          <BotaoPrincipal desabilitado={itens.length === 0} aoPressionar={finalizarCompra}>
+          <BotaoPrincipal
+            desabilitado={itens.length === 0 || !carrinho.endereco}
+            aoPressionar={finalizarCompra}
+          >
             FINALIZAR COMPRA
           </BotaoPrincipal>
         </View>

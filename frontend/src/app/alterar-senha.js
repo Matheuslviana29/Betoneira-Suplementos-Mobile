@@ -16,15 +16,18 @@ import { BotaoPrincipal } from '../components/BotaoPrincipal';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CampoFormulario } from '../components/CampoFormulario';
 import { cores, dimensoes, fontes } from '../constants/tema';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
+import { api } from '../services/api';
 
 const valoresIniciais = {
-    senhaAtual: 'senha123',
+    senhaAtual: '',
     novaSenha: '',
     confirmacaoSenha: '',
 };
 
 export default function TelaAlterarSenha() {
     const roteador = useRouter();
+    const { sair } = useAutenticacao();
     const referenciaNovaSenha = useRef(null);
     const referenciaConfirmacao = useRef(null);
     const [valores, setValores] = useState(valoresIniciais);
@@ -52,7 +55,7 @@ export default function TelaAlterarSenha() {
         roteador.replace('/perfil');
     };
 
-    const alterarSenha = () => {
+    const alterarSenha = async () => {
         const novosErros = {};
 
         if (!valores.senhaAtual) {
@@ -73,13 +76,17 @@ export default function TelaAlterarSenha() {
             return;
         }
 
-        // Substituir pelo envio à API quando a integração estiver disponível.
-        Toast.success('Senha alterada com sucesso.');
-        setValores((valoresAtuais) => ({
-            ...valoresAtuais,
-            novaSenha: '',
-            confirmacaoSenha: '',
-        }));
+        try {
+            await api.usuario.alterarSenha({
+                senhaAtual: valores.senhaAtual,
+                novaSenha: valores.novaSenha,
+            });
+            await sair();
+            Toast.success('Senha alterada. Entre novamente.');
+            roteador.replace('/login');
+        } catch (error) {
+            Toast.error(error.message);
+        }
     };
 
     return (

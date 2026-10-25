@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -15,11 +15,31 @@ import { BotaoPrincipal } from '../components/BotaoPrincipal';
 import { CabecalhoTela } from '../components/CabecalhoTela';
 import { CampoFormulario } from '../components/CampoFormulario';
 import { cores, dimensoes } from '../constants/tema';
-import { dadosUsuarioMock } from '../mocks/dadosUsuario';
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
+import { api } from '../services/api';
+import {
+  formatarCpf,
+  formatarDataApi,
+  formatarTelefone,
+  somenteDigitos,
+} from '../utils/dadosApi';
+
+const dadosFormulario = (usuario) => ({
+  celular: formatarTelefone(usuario?.celular),
+  cpf: formatarCpf(usuario?.cpf),
+  dataNascimento: formatarDataApi(usuario?.dataNascimento),
+  email: usuario?.email ?? '',
+  nomeCompleto: usuario?.nomeCompleto ?? '',
+  telefone: formatarTelefone(usuario?.telefone),
+});
 
 export default function TelaMeusDados() {
   const roteador = useRouter();
-  const [dados, setDados] = useState(dadosUsuarioMock);
+  const { atualizarUsuario, usuario } = useAutenticacao();
+  const [dados, setDados] = useState(() => dadosFormulario(usuario));
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => setDados(dadosFormulario(usuario)), [usuario]);
 
   const atualizarCampo = (campo, valor) => {
     setDados((dadosAtuais) => ({ ...dadosAtuais, [campo]: valor }));
@@ -34,9 +54,23 @@ export default function TelaMeusDados() {
     roteador.replace('/perfil');
   };
 
-  const salvar = () => {
-    // Substituir pelo envio à API quando a integração estiver disponível.
-    Toast.success('Dados salvos com sucesso.');
+  const salvar = async () => {
+    try {
+      setSalvando(true);
+      const updatedUser = await api.usuario.atualizar({
+        celular: somenteDigitos(dados.celular),
+        dataNascimento: dados.dataNascimento,
+        email: dados.email,
+        nomeCompleto: dados.nomeCompleto,
+        telefone: dados.telefone ? somenteDigitos(dados.telefone) : undefined,
+      });
+      atualizarUsuario(updatedUser);
+      Toast.success('Dados salvos com sucesso.');
+    } catch (error) {
+      Toast.error(error.message);
+    } finally {
+      setSalvando(false);
+    }
   };
 
   return (
@@ -86,19 +120,29 @@ export default function TelaMeusDados() {
               estiloRecipienteEntrada={estilos.entradaCinza}
               keyboardType="phone-pad"
               maxLength={15}
-              rotulo="Telefone"
-              onChangeText={(valor) => atualizarCampo('telefone', valor)}
+              rotulo="Celular"
+              onChangeText={(valor) => atualizarCampo('celular', formatarTelefone(valor))}
+              returnKeyType="next"
+              value={dados.celular}
+            />
+
+            <CampoFormulario
+              autoComplete="tel"
+              estiloRecipienteEntrada={estilos.entradaCinza}
+              keyboardType="phone-pad"
+              maxLength={15}
+              rotulo="Telefone fixo"
+              onChangeText={(valor) => atualizarCampo('telefone', formatarTelefone(valor))}
               returnKeyType="next"
               value={dados.telefone}
             />
 
             <CampoFormulario
               estiloRecipienteEntrada={estilos.entradaCinza}
+              editable={false}
               keyboardType="number-pad"
               maxLength={14}
               rotulo="CPF"
-              onChangeText={(valor) => atualizarCampo('cpf', valor)}
-              returnKeyType="next"
               value={dados.cpf}
             />
 
@@ -114,7 +158,7 @@ export default function TelaMeusDados() {
             />
 
             <View style={estilos.recipienteBotao}>
-              <BotaoPrincipal aoPressionar={salvar}>SALVAR</BotaoPrincipal>
+              <BotaoPrincipal carregando={salvando} aoPressionar={salvar}>SALVAR</BotaoPrincipal>
             </View>
           </View>
         </ScrollView>

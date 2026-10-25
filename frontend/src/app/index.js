@@ -1,5 +1,10 @@
 import { Redirect } from 'expo-router';
 
+import { useAutenticacao } from '../contextos/AutenticacaoContext';
+
 export default function RotaInicial() {
-  return <Redirect href="/login" />;
+  const { autenticado, carregando } = useAutenticacao();
+
+  if (carregando) return null;
+  return <Redirect href={autenticado ? '/home' : '/login'} />;
 }

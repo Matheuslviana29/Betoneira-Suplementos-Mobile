@@ -1,20 +1,23 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
-export function BotaoPrincipal({ children, desabilitado = false, aoPressionar }) {
+export function BotaoPrincipal({ children, carregando = false, desabilitado = false, aoPressionar }) {
+  const indisponivel = desabilitado || carregando;
+
   return (
     <Pressable
       accessibilityRole="button"
-      disabled={desabilitado}
+      accessibilityState={{ busy: carregando, disabled: indisponivel }}
+      disabled={indisponivel}
       onPress={aoPressionar}
       style={({ pressed }) => [
         estilos.botao,
         pressed && estilos.pressionado,
-        desabilitado && estilos.desabilitado,
+        indisponivel && estilos.desabilitado,
       ]}
     >
-      <Text style={estilos.rotulo}>{children}</Text>
+      {carregando ? <ActivityIndicator color="#FFFFFF" /> : <Text style={estilos.rotulo}>{children}</Text>}
     </Pressable>
   );
 }

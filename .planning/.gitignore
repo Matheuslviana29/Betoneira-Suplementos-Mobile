@@ -5,3 +5,7 @@ pwdev-audit.db-wal
 .audit-tmp/
 audit-report.md
 audit-report.pdf
+
+# PWDEV planning artifacts (not versioned)
+config.json
+feat/

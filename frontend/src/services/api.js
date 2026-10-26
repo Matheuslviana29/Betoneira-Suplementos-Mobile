@@ -1,10 +1,14 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
-const DEFAULT_API_URL = Platform.select({
-  android: 'http://10.0.2.2:3333/api/v1',
-  default: 'http://localhost:3333/api/v1',
+import { resolveApiUrl } from './api-url.mjs';
+
+const API_URL = resolveApiUrl({
+  browserHostname: globalThis.location?.hostname,
+  configuredUrl: process.env.EXPO_PUBLIC_API_URL,
+  hostUri: Constants.expoConfig?.hostUri,
+  platform: Platform.OS,
 });
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL).replace(/\/$/, '');
 
 let sessionToken = null;
 let unauthorizedHandler = null;
@@ -59,7 +63,9 @@ export async function apiRequest(path, { body, method = 'GET' } = {}) {
     if (error.name === 'AbortError') {
       throw new ApiError('A API demorou para responder. Tente novamente.');
     }
-    throw new ApiError('Não foi possível conectar à API. Verifique se o backend está ativo.');
+    throw new ApiError(
+      `Não foi possível conectar à API em ${API_URL}. Verifique o backend e a rede.`,
+    );
   } finally {
     clearTimeout(timeout);
   }

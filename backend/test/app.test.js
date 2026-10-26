@@ -33,12 +33,13 @@ after(async () => {
   if (database?.open) database.close();
 });
 
-async function request(path, { method = 'GET', token, body } = {}) {
+async function request(path, { method = 'GET', token, body, origin } = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: {
       ...(body ? { 'content-type': 'application/json' } : {}),
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(origin ? { origin } : {}),
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   });
@@ -50,6 +51,24 @@ test('GET /api/health informa que a API está ativa', async () => {
   const { response, data } = await request('/api/health');
   assert.equal(response.status, 200);
   assert.deepEqual(data, { status: 'ok' });
+});
+
+test('CORS permite o Expo web na rede local durante o desenvolvimento', async () => {
+  const { response } = await request('/api/v1/categorias', {
+    origin: 'http://192.168.0.14:8081',
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('access-control-allow-origin'), 'http://192.168.0.14:8081');
+});
+
+test('CORS continua rejeitando origens externas não configuradas', async () => {
+  const { response, data } = await request('/api/v1/categorias', {
+    origin: 'https://site-nao-configurado.example',
+  });
+
+  assert.equal(response.status, 403);
+  assert.equal(data.erro.codigo, 'ORIGEM_NAO_PERMITIDA');
 });
 
 test('catálogo público oferece busca, categoria e paginação', async () => {

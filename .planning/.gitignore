@@ -1,0 +1,7 @@
+# PWDEV audit trail (not versioned)
+pwdev-audit.db
+pwdev-audit.db-journal
+pwdev-audit.db-wal
+.audit-tmp/
+audit-report.md
+audit-report.pdf

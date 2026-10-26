@@ -75,7 +75,7 @@ export function adaptarPedido(pedido) {
   };
 }
 
-export const somenteDigitos = (value = '') => value.replace(/\D/g, '');
+export const somenteDigitos = (value = '') => String(value ?? '').replace(/\D/g, '');
 export const formatarCpf = (value = '') =>
   somenteDigitos(value)
     .slice(0, 11)

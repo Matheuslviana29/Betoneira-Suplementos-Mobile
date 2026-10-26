@@ -1,48 +1,97 @@
-# Betoneira Suplementos
+# Frontend — Betoneira Suplementos
 
-Aplicativo de loja de suplementos desenvolvido com React Native, Expo e Expo Router. O frontend consome a API REST do projeto para autenticação, catálogo, favoritos, carrinho, perfil, endereços, formas de pagamento e pedidos. Apenas a recuperação de senha continua simulada.
+Aplicativo de loja de suplementos desenvolvido com Expo SDK 57, React Native 0.86 e Expo Router. Consome a API REST do projeto para autenticação, catálogo, favoritos, carrinho, perfil, endereços, formas de pagamento e pedidos.
 
-## Como executar
+## Requisitos e instalação
 
-Use dois terminais. No primeiro, inicie o backend:
-
-```bash
-cd backend
-npm run db:seed
-npm start
-```
-
-O `db:seed` só precisa ser executado para popular ou restaurar os dados iniciais. Ele é seguro para ser executado novamente.
-
-No segundo terminal, inicie o Expo:
+Requer Node.js 22.13 ou superior.
 
 ```bash
 cd frontend
-npx expo start -c
+npm install
 ```
 
-Para testar no navegador, pressione `w` no terminal do Expo ou execute `npm run web`. O endereço padrão da API é `http://localhost:3333/api/v1`.
+Use `.env.example` como referência. A configuração é opcional no desenvolvimento porque o aplicativo deriva o host da API a partir do Metro:
 
-### Celular físico
-
-Crie `frontend/.env.local` e substitua `SEU_IP` pelo IP local do computador:
-
-```env
-EXPO_PUBLIC_API_URL=http://SEU_IP:3333/api/v1
+```bash
+cp .env.example .env
 ```
 
-O celular e o computador devem estar na mesma rede. Inclua a origem exibida pelo Expo em `CORS_ORIGINS` no arquivo `backend/.env` se o navegador informar bloqueio de CORS.
+```dotenv
+EXPO_PUBLIC_API_URL=http://192.168.0.10:3333/api/v1
+```
 
-## Estrutura principal
+Defina `EXPO_PUBLIC_API_URL` para builds ou quando a API estiver em outro computador ou servidor. Não versione `.env` ou variantes locais.
 
-- `src/app/`: telas e rotas.
-- `src/components/`: componentes de interface.
-- `src/contextos/`: sessão e autenticação compartilhadas.
-- `src/hooks/`: consultas e lógica reutilizável.
-- `src/services/`: comunicação com a API e armazenamento seguro da sessão.
-- `src/schemas/`: validação dos formulários.
-- `src/utils/`: adaptação e formatação dos dados da API.
+## Execução
 
-## Observação sobre pagamentos
+Inicie primeiro o backend em outro terminal. Depois use:
 
-O cadastro atual armazena somente bandeira, quatro últimos dígitos e validade para permitir o teste do checkout. Nenhum número completo de cartão ou código de segurança é armazenado. A tokenização será integrada ao Mercado Pago em uma etapa futura.
+```bash
+npm start
+```
+
+Ou abra uma plataforma diretamente:
+
+```bash
+npm run android
+npm run ios
+npm run web
+```
+
+- Android requer um emulador configurado ou dispositivo compatível.
+- iOS requer macOS e Xcode.
+- Web abre o aplicativo no navegador.
+- Em aparelho físico, celular e computador devem estar na mesma rede.
+
+Se a versão web informar bloqueio de CORS, inclua a origem exibida pelo Expo em `CORS_ORIGINS` no `backend/.env`.
+
+## Arquitetura
+
+- `src/app/`: adaptadores finos de rota; preservam os caminhos públicos do Expo Router e delegam para as telas das funcionalidades.
+- `src/features/auth/`: login, criação de conta e recuperação simulada de senha.
+- `src/features/catalogo/`: página inicial e catálogo de produtos.
+- `src/features/carrinho/`: carrinho de compras.
+- `src/features/checkout/`: checkout, endereços e formas de pagamento.
+- `src/features/perfil/`: perfil, dados pessoais, senha e favoritos.
+- `src/features/pedidos/`: histórico e detalhes de pedidos.
+- `src/components/`: componentes compartilhados.
+- `src/contextos/`: autenticação e estado compartilhado.
+- `src/hooks/`: hooks reutilizáveis.
+- `src/services/`: cliente da API e armazenamento seguro da sessão.
+- `src/schemas/`: validação de formulários.
+- `src/utils/`: adaptação e formatação de dados.
+
+## Funcionalidades
+
+- cadastro, login, logout e sessão persistida;
+- busca, categorias, destaques e paginação no catálogo;
+- favoritos;
+- carrinho com ajuste de quantidade;
+- edição dos dados pessoais e alteração de senha;
+- cadastro e remoção de endereços e formas de pagamento;
+- checkout, criação e consulta de pedidos.
+
+## Limitações conhecidas
+
+- a recuperação de senha é simulada;
+- o cancelamento de pedido existe na API, mas ainda não possui interface;
+- a seleção explícita do endereço e da forma de pagamento no checkout está pendente.
+
+## Testes
+
+```bash
+npm test
+node --test test/router-contract.test.mjs
+node --test test/import-contract.test.mjs
+```
+
+Resultados atuais:
+
+- testes do frontend: 14/14;
+- contrato das rotas: 5/5;
+- resolução de imports: 1/1.
+
+## Dados locais e segurança
+
+Não versione `.env`, credenciais, tokens, bancos SQLite ou artefatos locais de ferramentas. Formas de pagamento armazenam apenas bandeira, quatro últimos dígitos, validade e token do gateway; número completo e CVV não devem ser persistidos.

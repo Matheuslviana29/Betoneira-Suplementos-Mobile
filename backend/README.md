@@ -53,7 +53,11 @@ npm run dev
 
 O `db:seed` executa primeiro todas as migrações pendentes e depois cadastra o catálogo inicial. Ele pode ser executado novamente sem duplicar dados. A API estará em `http://localhost:3333`.
 
-Copie `.env.example` para `.env` se precisar alterar:
+Copie `.env.example` para `.env` para configurar o ambiente local:
+
+```bash
+cp .env.example .env
+```
 
 ```dotenv
 PORT=3333
@@ -64,6 +68,8 @@ CORS_ORIGINS=http://localhost:8081,http://127.0.0.1:8081
 ```
 
 No Android Emulator, o frontend normalmente acessa a máquina pelo host `10.0.2.2`; em aparelho físico, use o IP local do computador. A origem web do Expo deve estar em `CORS_ORIGINS`.
+
+Não versione `.env`, o banco SQLite criado em `data/` ou artefatos locais de ferramentas.
 
 ## Convenções do banco
 
@@ -150,3 +156,11 @@ npm run db:check
 ```
 
 Os testes usam SQLite em memória e cobrem saúde, catálogo, autenticação, autorização, validação e o fluxo completo até a criação do pedido.
+
+Resultado atual: **8/8 testes aprovados**.
+
+## Limitações de integração
+
+- a recuperação de senha permanece simulada no frontend;
+- o endpoint de cancelamento de pedido existe, mas ainda não possui interface no frontend;
+- a seleção explícita de endereço e forma de pagamento no checkout está pendente no frontend.

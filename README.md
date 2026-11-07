@@ -1,114 +1,108 @@
 # Betoneira Suplementos
 
-Aplicativo de loja de suplementos com frontend React Native/Expo e API REST Node.js/Express com SQLite.
+Loja de suplementos com aplicativo Expo/React Native e API Node.js/Express com SQLite.
 
-## Requisitos
+## Requisito obrigatório
 
-- Node.js 22.18.0 (versão fixada em `.nvmrc`);
-- npm;
-- Android Studio/Android Emulator para Android, Xcode para iOS em macOS ou um navegador para web.
+- Node.js **22.18.0**. A versão também está registrada em `.nvmrc`.
+- npm, instalado com o Node.js.
 
-## Estrutura
+## Clonar e instalar no Windows
 
-```text
-.
-├── frontend/  # Expo SDK 57, React Native e Expo Router
-└── backend/   # API REST, Express e SQLite
+No PowerShell:
+
+```powershell
+git clone https://github.com/Matheuslviana29/Betoneira-Suplementos-Mobile.git
+cd Betoneira-Suplementos-Mobile
 ```
 
-Cada projeto possui seu próprio `package.json`, `package-lock.json` e `node_modules`. Execute os comandos dentro da pasta correspondente.
+O repositório contém dois projetos independentes. Cada pasta possui seu próprio `package.json` e `package-lock.json`:
 
-No frontend, `frontend/src/app/` contém adaptadores finos de rota do Expo Router. As telas ficam organizadas por funcionalidade em `frontend/src/features/`, atualmente nas áreas de autenticação, catálogo, carrinho, checkout, perfil e pedidos.
+- `backend/`: API e banco SQLite;
+- `frontend/`: aplicativo Expo.
 
-## Instalação e configuração
+Instale cada projeto com `npm ci` — não use `npm install`:
 
-Instale as dependências separadamente:
-
-```bash
+```powershell
 cd backend
-npm ci
+npm.cmd ci
 
-cd ../frontend
-npm ci
+cd ..\frontend
+npm.cmd ci
 ```
 
-O backend usa o módulo `node:sqlite` incluído no Node.js 22.18.0. A instalação não
-requer Python, `node-gyp`, Visual Studio Build Tools ou compiladores C++.
+## Executar
 
-Use os arquivos de exemplo como referência para a configuração local:
+Abra dois terminais.
 
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
+No primeiro, prepare o banco e inicie a API:
 
-No Windows, copie os arquivos pelo Explorador ou use `Copy-Item` no PowerShell. O frontend normalmente deriva o host da API a partir do Metro; `EXPO_PUBLIC_API_URL` só precisa ser definido quando a API usa outro host. Ajuste `CORS_ORIGINS` no backend para origens web adicionais.
-
-Nunca versione arquivos `.env`, bancos SQLite gerados em `backend/data/` ou artefatos locais em `.planning/`.
-
-## Execução
-
-Em um terminal, prepare e inicie o backend:
-
-```bash
+```powershell
 cd backend
-npm run db:seed
-npm run dev
+npm.cmd run db:seed
+npm.cmd run dev
 ```
 
-A API fica disponível por padrão em `http://localhost:3333`.
+A API ficará disponível em `http://localhost:3333`.
 
-Em outro terminal, inicie o frontend:
+No segundo, inicie o aplicativo:
 
-```bash
+```powershell
 cd frontend
-npm start
+npm.cmd start
 ```
 
 Também é possível abrir uma plataforma diretamente:
 
-```bash
-npm run android
-npm run ios
-npm run web
+```powershell
+npm.cmd run web
+npm.cmd run android
 ```
 
-O comando de iOS requer macOS/Xcode. Para dispositivo físico, mantenha o aparelho e o computador na mesma rede.
+O comando de Android requer emulador ou aparelho configurado. iOS requer macOS e Xcode.
+
+### Celular físico
+
+Normalmente o Expo detecta o endereço da API pela rede. Se isso não funcionar, crie `frontend/.env.local` e defina `EXPO_PUBLIC_API_URL` com o IP do computador, a porta `3333` e o caminho `/api/v1`. O celular e o computador precisam estar na mesma rede.
+
+Não publique esse arquivo nem coloque nele credenciais, senhas, tokens ou dados pessoais.
+
+## Testes
+
+```powershell
+cd backend
+npm.cmd test
+
+cd ..\frontend
+npm.cmd test
+node --test test/router-contract.test.mjs
+node --test test/import-contract.test.mjs
+```
+
+## Dados locais
+
+O banco é local e fica em `backend/data/database.sqlite`. Ele é ignorado pelo Git. Usuários, carrinhos, endereços e pedidos existem somente no computador que está executando o backend.
+
+## Arquitetura
+
+- As rotas do Expo ficam em `frontend/src/app/` e são adaptadores pequenos.
+- As telas e regras de interface ficam em `frontend/src/features/`.
+- O backend segue `rota → controller → service → repository → banco`.
 
 ## Funcionalidades atuais
 
 - cadastro, login, logout e sessão persistida;
-- catálogo com busca, categorias, destaques e paginação;
-- favoritos;
-- carrinho com inclusão, quantidade e remoção de itens;
-- perfil, dados pessoais e alteração de senha;
-- cadastro e remoção de endereços e formas de pagamento;
-- checkout e criação de pedidos;
-- histórico e detalhes de pedidos.
+- catálogo, busca, categorias e favoritos;
+- carrinho e controle de quantidades;
+- perfil e alteração de senha;
+- endereços e formas de pagamento;
+- seleção explícita de endereço e pagamento no checkout;
+- criação, histórico e detalhes de pedidos.
 
-## Limitações conhecidas
+## Limitações atuais
 
-- a recuperação de senha é simulada;
-- o backend suporta cancelamento de pedido quando permitido, mas ainda não existe interface no frontend;
-- a seleção explícita de endereço e forma de pagamento no checkout está pendente.
+- recuperação de senha simulada;
+- cancelamento de pedido disponível na API, mas ainda sem interface;
+- smoke test de iOS ainda não realizado.
 
-## Testes e verificações
-
-```bash
-cd frontend
-npm test
-node --test test/router-contract.test.mjs
-node --test test/import-contract.test.mjs
-
-cd ../backend
-npm test
-```
-
-Estado verificado:
-
-- frontend: 14/14;
-- backend: 8/8;
-- contrato das rotas: 5/5;
-- resolução de imports: 1/1.
-
-Consulte [frontend/README.md](frontend/README.md) e [backend/README.md](backend/README.md) para detalhes de cada projeto.
+Veja também [frontend/README.md](frontend/README.md) e [backend/README.md](backend/README.md).

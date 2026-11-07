@@ -4,8 +4,8 @@ import { createDatabase } from './connection.js';
 const database = createDatabase(env.databasePath);
 
 try {
-  const integrity = database.pragma('integrity_check', { simple: true });
-  const foreignKeyErrors = database.pragma('foreign_key_check');
+  const integrity = database.prepare('PRAGMA integrity_check').get().integrity_check;
+  const foreignKeyErrors = database.prepare('PRAGMA foreign_key_check').all();
 
   if (integrity !== 'ok' || foreignKeyErrors.length > 0) {
     console.error({ integrity, foreignKeyErrors });

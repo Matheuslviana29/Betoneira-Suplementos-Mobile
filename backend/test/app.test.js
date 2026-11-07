@@ -30,7 +30,7 @@ after(async () => {
       server.close((error) => (error ? reject(error) : resolve()));
     });
   }
-  if (database?.open) database.close();
+  if (database?.isOpen) database.close();
 });
 
 async function request(path, { method = 'GET', token, body, origin } = {}) {

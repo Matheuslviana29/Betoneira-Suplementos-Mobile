@@ -42,14 +42,17 @@ backend/
 
 ## Instalação e execução
 
-Requer Node.js 22.13 ou superior.
+Requer exatamente Node.js 22.18.0, conforme a versão fixada em `../.nvmrc`.
 
 ```bash
 cd backend
-npm install
+npm ci
 npm run db:seed
 npm run dev
 ```
+
+O backend usa o módulo `node:sqlite` incluído no Node.js. Não é necessário
+instalar Python, `node-gyp`, Visual Studio Build Tools ou compiladores C++.
 
 O `db:seed` executa primeiro todas as migrações pendentes e depois cadastra o catálogo inicial. Ele pode ser executado novamente sem duplicar dados. A API estará em `http://localhost:3333`.
 

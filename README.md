@@ -4,7 +4,7 @@ Aplicativo de loja de suplementos com frontend React Native/Expo e API REST Node
 
 ## Requisitos
 
-- Node.js 22.13 ou superior;
+- Node.js 22.18.0 (versão fixada em `.nvmrc`);
 - npm;
 - Android Studio/Android Emulator para Android, Xcode para iOS em macOS ou um navegador para web.
 
@@ -26,11 +26,14 @@ Instale as dependências separadamente:
 
 ```bash
 cd backend
-npm install
+npm ci
 
 cd ../frontend
-npm install
+npm ci
 ```
+
+O backend usa o módulo `node:sqlite` incluído no Node.js 22.18.0. A instalação não
+requer Python, `node-gyp`, Visual Studio Build Tools ou compiladores C++.
 
 Use os arquivos de exemplo como referência para a configuração local:
 

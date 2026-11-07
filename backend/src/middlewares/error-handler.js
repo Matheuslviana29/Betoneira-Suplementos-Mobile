@@ -1,5 +1,14 @@
-import { SqliteError } from 'better-sqlite3';
 import { AppError } from '../errors/app-error.js';
+
+const SQLITE_CONSTRAINT = 19;
+
+function isSqliteConstraintError(error) {
+  return (
+    error?.code === 'ERR_SQLITE_ERROR' &&
+    Number.isInteger(error.errcode) &&
+    (error.errcode & 0xff) === SQLITE_CONSTRAINT
+  );
+}
 
 export function notFoundHandler(request, response) {
   response.status(404).json({
@@ -34,7 +43,7 @@ export function errorHandler(error, request, response, next) {
     return;
   }
 
-  if (error instanceof SqliteError && error.code.startsWith('SQLITE_CONSTRAINT')) {
+  if (isSqliteConstraintError(error)) {
     response.status(409).json({
       erro: { codigo: 'CONFLITO_DE_DADOS', mensagem: 'Os dados informados já existem.' },
     });

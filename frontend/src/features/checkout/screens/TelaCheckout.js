@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
@@ -16,14 +16,15 @@ import { useConsultaAoFocar } from '../../../hooks/useConsultaAoFocar';
 import { api } from '../../../services/api';
 import { formatarMoeda } from '../../../utils/carrinho';
 import { adaptarCarrinho, adaptarEndereco, adaptarPagamento } from '../../../utils/dadosApi';
+import { useCheckoutSelection } from '../CheckoutSelectionContext';
 
 const estadoInicial = {
   carrinho: {
     itens: [],
     resumo: { freteCentavos: 0, quantidadeItens: 0, subtotalCentavos: 0, totalCentavos: 0 },
   },
-  endereco: null,
-  pagamento: null,
+  enderecos: [],
+  pagamentos: [],
 };
 
 async function carregarCheckout() {
@@ -34,17 +35,31 @@ async function carregarCheckout() {
   ]);
   return {
     carrinho: adaptarCarrinho(cart),
-    endereco: addresses[0] ? adaptarEndereco(addresses[0]) : null,
-    pagamento: payments[0] ? adaptarPagamento(payments[0]) : null,
+    enderecos: addresses.map(adaptarEndereco),
+    pagamentos: payments.map(adaptarPagamento),
   };
 }
 
 export default function TelaCheckout() {
   const roteador = useRouter();
-  const { dados, erro } = useConsultaAoFocar(carregarCheckout, estadoInicial);
+  const { carregando, dados, erro } = useConsultaAoFocar(carregarCheckout, estadoInicial);
+  const {
+    initializeSelection,
+    selectedAddressId,
+    selectedPaymentId,
+  } = useCheckoutSelection();
+  const selecaoInicializada = useRef(false);
   const [confirmando, setConfirmando] = useState(false);
-  const { carrinho, endereco, pagamento } = dados;
+  const { carrinho, enderecos, pagamentos } = dados;
   const { itens, resumo } = carrinho;
+  const endereco = enderecos.find((item) => item.id === selectedAddressId) ?? null;
+  const pagamento = pagamentos.find((item) => item.id === selectedPaymentId) ?? null;
+
+  useEffect(() => {
+    if (carregando || erro || selecaoInicializada.current) return;
+    initializeSelection(enderecos, pagamentos);
+    selecaoInicializada.current = true;
+  }, [carregando, enderecos, erro, initializeSelection, pagamentos]);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -56,9 +71,13 @@ export default function TelaCheckout() {
   };
 
   const confirmarPedido = async () => {
+    if (selectedAddressId === null || selectedPaymentId === null) return;
     try {
       setConfirmando(true);
-      await api.pedidos.criar({ enderecoId: endereco.id, formaPagamentoId: pagamento.id });
+      await api.pedidos.criar({
+        enderecoId: selectedAddressId,
+        formaPagamentoId: selectedPaymentId,
+      });
       Toast.success('Pedido realizado com sucesso.');
       roteador.replace('/pedidos');
     } catch (error) {
@@ -86,6 +105,11 @@ export default function TelaCheckout() {
       >
         <View style={estilos.conteudo}>
           <Text style={estilos.instrucao}>Revise os dados antes de confirmar o pedido.</Text>
+          {selectedAddressId === null || selectedPaymentId === null ? (
+            <Text accessibilityLiveRegion="polite" style={estilos.orientacaoSelecao}>
+              Selecione um endereço e uma forma de pagamento para confirmar o pedido.
+            </Text>
+          ) : null}
 
           <SecaoCheckout
             aoAlterar={() => roteador.push('/endereco-entrega')}
@@ -158,7 +182,9 @@ export default function TelaCheckout() {
           </View>
           <BotaoPrincipal
             carregando={confirmando}
-            desabilitado={itens.length === 0 || !endereco || !pagamento}
+            desabilitado={
+              itens.length === 0 || selectedAddressId === null || selectedPaymentId === null
+            }
             aoPressionar={confirmarPedido}
           >
             CONFIRMAR PEDIDO
@@ -206,6 +232,11 @@ const estilos = StyleSheet.create({
   instrucao: {
     color: cores.textoSecundario,
     fontFamily: fontes.regular,
+    fontSize: 10,
+  },
+  orientacaoSelecao: {
+    color: cores.erro,
+    fontFamily: fontes.seminegrito,
     fontSize: 10,
   },
   opcaoSelecionada: {

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Alert, ScrollView, StyleSheet, View } from 'react-native';
+import { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
 
@@ -12,12 +13,16 @@ import { cores, dimensoes } from '../../../constants/tema';
 import { useConsultaAoFocar } from '../../../hooks/useConsultaAoFocar';
 import { api } from '../../../services/api';
 import { adaptarEndereco } from '../../../utils/dadosApi';
+import { useCheckoutSelection } from '../CheckoutSelectionContext';
+import { ConfirmacaoAcao } from '../components/ConfirmacaoAcao';
 
 const carregarEnderecos = async () => (await api.enderecos.listar()).map(adaptarEndereco);
 
 export default function TelaEnderecoEntrega() {
   const roteador = useRouter();
   const { dados: enderecos, erro, recarregar } = useConsultaAoFocar(carregarEnderecos, []);
+  const { invalidateAddress, selectAddress, selectedAddressId } = useCheckoutSelection();
+  const [enderecoPendente, setEnderecoPendente] = useState(null);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -30,33 +35,27 @@ export default function TelaEnderecoEntrega() {
 
   const adicionarEndereco = () => roteador.push('/novo-endereco');
 
-  const abrirOpcoes = (endereco) => {
-    Alert.alert(endereco.apelido, endereco.enderecoCompleto, [
-      {
-        text: 'Tornar principal',
-        onPress: async () => {
-          try {
-            await api.enderecos.atualizar(endereco.id, { padrao: true });
-            await recarregar();
-          } catch (error) {
-            Toast.error(error.message);
-          }
-        },
-      },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await api.enderecos.remover(endereco.id);
-            await recarregar();
-          } catch (error) {
-            Toast.error(error.message);
-          }
-        },
-      },
-      { text: 'Cancelar', style: 'cancel' },
-    ]);
+  const tornarPrincipal = async () => {
+    const endereco = enderecoPendente;
+    setEnderecoPendente(null);
+    try {
+      await api.enderecos.atualizar(endereco.id, { padrao: true });
+      await recarregar();
+    } catch (error) {
+      Toast.error(error.message);
+    }
+  };
+
+  const removerEndereco = async () => {
+    const endereco = enderecoPendente;
+    setEnderecoPendente(null);
+    try {
+      await api.enderecos.remover(endereco.id);
+      invalidateAddress(endereco.id);
+      await recarregar();
+    } catch (error) {
+      Toast.error(error.message);
+    }
   };
 
   return (
@@ -76,11 +75,18 @@ export default function TelaEnderecoEntrega() {
         style={estilos.rolagem}
       >
         <View style={estilos.conteudo}>
+          {selectedAddressId === null ? (
+            <Text accessibilityLiveRegion="polite" style={estilos.orientacao}>
+              Escolha um endereço para continuar com o pedido.
+            </Text>
+          ) : null}
           {enderecos.map((endereco) => (
             <CartaoEndereco
-              aoAbrirOpcoes={abrirOpcoes}
+              aoAbrirOpcoes={setEnderecoPendente}
+              aoSelecionar={(item) => selectAddress(item.id)}
               endereco={endereco}
               key={endereco.id}
+              selecionado={selectedAddressId === endereco.id}
             />
           ))}
 
@@ -95,6 +101,16 @@ export default function TelaEnderecoEntrega() {
       <SafeAreaView edges={['bottom', 'left', 'right']} style={estilos.areaNavegacao}>
         <BarraNavegacaoInferior />
       </SafeAreaView>
+
+      <ConfirmacaoAcao
+        acaoSecundaria={tornarPrincipal}
+        aoCancelar={() => setEnderecoPendente(null)}
+        aoConfirmar={removerEndereco}
+        descricao={enderecoPendente?.enderecoCompleto ?? ''}
+        rotuloSecundario="Tornar principal"
+        titulo={enderecoPendente?.apelido ?? 'Endereço'}
+        visivel={enderecoPendente !== null}
+      />
     </View>
   );
 }
@@ -130,6 +146,10 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 10,
     paddingTop: 18,
     width: '100%',
+  },
+  orientacao: {
+    color: cores.textoSecundario,
+    fontSize: 11,
   },
   areaNavegacao: {
     backgroundColor: cores.fundo,

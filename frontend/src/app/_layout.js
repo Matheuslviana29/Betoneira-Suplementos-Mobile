@@ -13,6 +13,7 @@ import ToastManager from 'toastify-react-native';
 import { ToastPersonalizado } from '../components/ToastPersonalizado';
 import { cores } from '../constants/tema';
 import { AutenticacaoProvider, useAutenticacao } from '../contextos/AutenticacaoContext';
+import { CheckoutSelectionProvider } from '../features/checkout/CheckoutSelectionContext';
 import '../styles/global.css';
 
 const renderizarToast = (propriedades) => <ToastPersonalizado {...propriedades} />;
@@ -62,23 +63,25 @@ export default function LayoutRaiz() {
 
   return (
     <AutenticacaoProvider>
-      <GuardiaoRotas />
-      <StatusBar backgroundColor={cores.fundo} style="dark" />
-      <Stack
-        screenOptions={{
-          animation: 'slide_from_right',
-          contentStyle: { backgroundColor: cores.fundo },
-          headerShown: false,
-        }}
-      />
-      <ToastManager
-        config={configuracaoToast}
-        duration={2400}
-        position="top"
-        showCloseIcon={false}
-        topOffset={44}
-        useModal={false}
-      />
+      <CheckoutSelectionProvider>
+        <GuardiaoRotas />
+        <StatusBar backgroundColor={cores.fundo} style="dark" />
+        <Stack
+          screenOptions={{
+            animation: 'slide_from_right',
+            contentStyle: { backgroundColor: cores.fundo },
+            headerShown: false,
+          }}
+        />
+        <ToastManager
+          config={configuracaoToast}
+          duration={2400}
+          position="top"
+          showCloseIcon={false}
+          topOffset={44}
+          useModal={false}
+        />
+      </CheckoutSelectionProvider>
     </AutenticacaoProvider>
   );
 }

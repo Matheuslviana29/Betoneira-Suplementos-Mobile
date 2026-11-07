@@ -3,19 +3,28 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { cores, fontes } from '../constants/tema';
 
-export function CartaoFormaPagamento({ aoAbrirOpcoes, cartao }) {
+export function CartaoFormaPagamento({ aoAbrirOpcoes, aoSelecionar, cartao, selecionado = false }) {
   return (
-    <View style={estilos.cartao}>
-      <View style={estilos.iconeCartao}>
-        <Feather color={cores.laranja} name="credit-card" size={18} />
-      </View>
+    <View style={[estilos.cartao, selecionado && estilos.cartaoSelecionado]}>
+      <Pressable
+        accessibilityLabel={`${cartao.bandeira} final ${cartao.ultimosDigitos}`}
+        accessibilityRole="radio"
+        accessibilityState={{ selected: selecionado }}
+        onPress={() => aoSelecionar(cartao)}
+        style={({ pressed }) => [estilos.selecao, pressed && estilos.pressionado]}
+      >
+        <View style={estilos.iconeCartao}>
+          <Feather color={cores.laranja} name="credit-card" size={18} />
+        </View>
 
-      <View style={estilos.dados}>
-        <Text style={estilos.identificacao}>
+        <View style={estilos.dados}>
+          <Text style={estilos.identificacao}>
           {cartao.bandeira} •••• {cartao.ultimosDigitos}
-        </Text>
-        <Text style={estilos.validade}>Validade: {cartao.validade}</Text>
-      </View>
+          </Text>
+          <Text style={estilos.validade}>Validade: {cartao.validade}</Text>
+          {selecionado ? <Text style={estilos.selecionado}>Selecionado</Text> : null}
+        </View>
+      </Pressable>
 
       <Pressable
         accessibilityLabel={`Opções do cartão ${cartao.bandeira} final ${cartao.ultimosDigitos}`}
@@ -42,6 +51,16 @@ const estilos = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
+  cartaoSelecionado: {
+    borderColor: cores.laranja,
+    borderWidth: 2,
+  },
+  selecao: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    minWidth: 0,
+  },
   iconeCartao: {
     alignItems: 'center',
     backgroundColor: '#FFF1E6',
@@ -65,6 +84,12 @@ const estilos = StyleSheet.create({
     fontFamily: fontes.regular,
     fontSize: 9,
     marginTop: 3,
+  },
+  selecionado: {
+    color: cores.laranja,
+    fontFamily: fontes.seminegrito,
+    fontSize: 9,
+    marginTop: 4,
   },
   botaoOpcoes: {
     alignItems: 'center',

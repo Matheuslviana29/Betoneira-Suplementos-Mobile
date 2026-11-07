@@ -159,6 +159,8 @@ test('fluxo REST cria conta, endereço, pagamento, carrinho e pedido', async () 
     },
   });
   assert.equal(order.response.status, 201);
+  assert.equal(order.data.dados.enderecoEntrega.destinatario, 'Cliente de Teste');
+  assert.equal(order.data.dados.pagamentoDescricao, 'Visa final 4321');
   assert.equal(order.data.dados.itens.length, 1);
   assert.equal(
     order.data.dados.totalCentavos,

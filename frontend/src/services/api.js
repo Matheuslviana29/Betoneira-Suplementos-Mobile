@@ -97,6 +97,13 @@ export const api = {
     criar: (data) => apiRequest('/formas-pagamento', { method: 'POST', body: data }),
     remover: (id) => apiRequest(`/formas-pagamento/${id}`, { method: 'DELETE' }),
   },
+  mercadoPago: {
+    criarPreferencia: (enderecoId) =>
+      apiRequest('/pagamentos/mercado-pago/preferencia', {
+        method: 'POST',
+        body: { enderecoId },
+      }),
+  },
   favoritos: {
     listar: () => apiRequest('/favoritos'),
     adicionar: (produtoId) =>

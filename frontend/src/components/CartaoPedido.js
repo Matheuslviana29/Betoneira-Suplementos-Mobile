@@ -11,7 +11,11 @@ export function CartaoPedido({ pedido }) {
           <Text style={estilos.data}>Realizado em {pedido.data}</Text>
         </View>
 
-        <View style={[estilos.status, { backgroundColor: `${pedido.corStatus}18` }]}>
+        <View
+          accessibilityLabel={`Status do pedido: ${pedido.status}`}
+          accessibilityRole="text"
+          style={[estilos.status, { backgroundColor: `${pedido.corStatus}18` }]}
+        >
           <Text style={[estilos.textoStatus, { color: pedido.corTextoStatus }]}>
             {pedido.status}
           </Text>

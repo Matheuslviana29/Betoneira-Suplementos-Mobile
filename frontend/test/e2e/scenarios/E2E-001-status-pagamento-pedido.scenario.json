@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "E2E-001",
+  "title": "Status financeiro do pedido",
+  "feature_slug": "mercado-pago-status-pedido",
+  "ac_refs": ["AC-008"],
+  "priority": "P1",
+  "preconditions": {
+    "base_url_env": "EXPO_WEB_URL",
+    "users": [{ "role": "cliente", "credentials_env": { "email": "E2E_EMAIL", "password": "E2E_PASSWORD" } }]
+  },
+  "steps": [
+    { "action": "navigate", "target": "/pedidos" },
+    { "action": "observe", "target": { "role": "text", "name": "Status do pedido" } }
+  ],
+  "assertions": [
+    { "type": "visible", "target": { "text": "Aguardando pagamento" } },
+    { "type": "visible", "target": { "text": "Pagamento aprovado — aguardando envio" } },
+    { "type": "visible", "target": { "text": "Pagamento recusado" } },
+    { "type": "visible", "target": { "text": "Pagamento cancelado" } }
+  ],
+  "variants": {
+    "happy_path": { "description": "Lista apresenta os estados financeiros com rótulos claros." }
+  },
+  "not_applicable": {
+    "validation_error": "A tela não contém formulário.",
+    "forbidden": "Autenticação já é coberta pelo fluxo existente.",
+    "empty_state": "O critério exige pedidos previamente preparados."
+  }
+}

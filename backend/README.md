@@ -9,6 +9,7 @@ Use obrigatoriamente Node.js **22.18.0**. O backend possui seu próprio `package
 ```powershell
 cd backend
 npm.cmd ci
+Copy-Item .env.example .env
 npm.cmd run db:seed
 npm.cmd run dev
 ```
@@ -21,6 +22,34 @@ A ordem é importante:
 4. iniciar o frontend em outro terminal.
 
 A API ficará disponível em `http://localhost:3333`. O backend usa `node:sqlite`, incluído no Node.js, sem exigir Python ou ferramentas C++.
+
+## Mercado Pago Checkout Pro (MVP acadêmico)
+
+O SDK oficial `mercadopago` fica somente neste backend. Copie `backend/.env.example` para
+`backend/.env` e substitua o placeholder de `MERCADO_PAGO_ACCESS_TOKEN` pelo Access Token de
+teste da sua aplicação Mercado Pago. Nunca use uma variável `EXPO_PUBLIC_*`, nunca coloque o
+token no frontend e não versione o arquivo `.env`.
+
+Use uma conta e credenciais de teste do Mercado Pago para validar o botão **Pagar com Mercado
+Pago**. Não coloque Access Token, assinatura de webhook ou qualquer credencial real em comandos,
+logs, documentação ou arquivos versionados.
+
+O endpoint autenticado `POST /api/v1/pagamentos/mercado-pago/preferencia` recebe apenas
+`enderecoId`. Usuário, carrinho, produtos, quantidades, preços e frete são obtidos no backend.
+A resposta expõe somente `init_point` e `preference_id`.
+
+Ao iniciar o Checkout Pro, a API cria um pedido local com status financeiro
+`aguardando_pagamento`. Configure também `MERCADO_PAGO_WEBHOOK_SECRET` somente em
+`backend/.env`. No painel do Mercado Pago, habilite o evento **Pagamentos** para uma URL HTTPS
+pública terminada em `/api/v1/webhooks/mercado-pago`.
+
+Em desenvolvimento, exponha temporariamente a porta `3333` com um túnel HTTPS de sua escolha,
+sem adicioná-lo às dependências do projeto. O backend valida a assinatura, consulta o pagamento
+pelo SDK e só então atualiza o pedido. O retorno visual do navegador nunca confirma pagamento.
+
+Limitação acadêmica: o fluxo Mercado Pago não baixa ou reserva estoque e não limpa, converte ou
+altera o carrinho, inclusive após aprovação. A aprovação também não inicia automaticamente
+separação ou envio.
 
 ## Banco local
 

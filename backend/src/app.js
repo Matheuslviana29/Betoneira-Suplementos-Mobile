@@ -11,16 +11,34 @@ import { errorHandler, notFoundHandler } from './middlewares/error-handler.js';
 import { createRepositories } from './repositories/index.js';
 import { createApiRouter } from './routes/index.js';
 import { createServices } from './services/index.js';
+import { createMercadoPagoService } from './services/mercado-pago.service.js';
 
 export function createApp({
   database,
   corsOrigins = env.corsOrigins,
   nodeEnvironment = env.nodeEnvironment,
   sessionDurationDays = env.sessionDurationDays,
+  mercadoPagoAccessToken = env.mercadoPagoAccessToken,
+  mercadoPagoWebhookSecret = env.mercadoPagoWebhookSecret,
+  mercadoPagoPaymentClient,
+  mercadoPagoPreferenceClient,
+  mercadoPagoSignatureValidator,
 }) {
   const app = express();
   const repositories = createRepositories(database);
-  const services = createServices({ database, repositories, sessionDurationDays });
+  const mercadoPagoService = createMercadoPagoService({
+    accessToken: mercadoPagoAccessToken,
+    paymentClient: mercadoPagoPaymentClient,
+    preferenceClient: mercadoPagoPreferenceClient,
+    signatureValidator: mercadoPagoSignatureValidator,
+  });
+  const services = createServices({
+    database,
+    mercadoPagoService,
+    mercadoPagoWebhookSecret,
+    repositories,
+    sessionDurationDays,
+  });
   const controllers = createControllers(services);
   const authenticate = createAuthenticationMiddleware(services.auth);
 

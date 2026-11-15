@@ -11,6 +11,14 @@ import { createSessionToken, hashSessionToken } from '../utils/token.js';
 
 const SHIPPING_IN_CENTS = 1500;
 
+const MERCADO_PAGO_STATUS = {
+  approved: 'pago_aguardando_envio',
+  cancelled: 'cancelado',
+  in_process: 'aguardando_pagamento',
+  pending: 'aguardando_pagamento',
+  rejected: 'recusado',
+};
+
 function notFound(resource) {
   return new AppError(`${resource} não encontrado.`, {
     statusCode: 404,
@@ -46,7 +54,13 @@ function formatCart(cart, items) {
   };
 }
 
-export function createServices({ database, repositories, sessionDurationDays }) {
+export function createServices({
+  database,
+  mercadoPagoService,
+  mercadoPagoWebhookSecret,
+  repositories,
+  sessionDurationDays,
+}) {
   const auth = {
     async register(data) {
       if (repositories.users.findByEmail(data.email)) {
@@ -233,6 +247,104 @@ export function createServices({ database, repositories, sessionDurationDays }) 
     },
   };
 
+  const mercadoPago = {
+    async createPreference(userId, { enderecoId }) {
+      const address = repositories.customers.findAddress(userId, enderecoId);
+      if (!address) throw notFound('Endereço');
+
+      const cart = repositories.carts.getActiveCart(userId);
+      const items = cart ? repositories.carts.listItems(cart.pk_id) : [];
+
+      if (items.length === 0) {
+        throw new AppError('O carrinho está vazio.', {
+          statusCode: 422,
+          code: 'CARRINHO_VAZIO',
+        });
+      }
+
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.preco_centavos * item.quantidade,
+        0,
+      );
+      const createPendingOrder = database.transaction(() => {
+        const order = repositories.orders.insertOrder({
+          userId,
+          addressId: address.pk_id,
+          paymentMethodId: null,
+          subtotal,
+          shipping: SHIPPING_IN_CENTS,
+          total: subtotal + SHIPPING_IN_CENTS,
+          destinatario: address.destinatario,
+          cep: address.cep,
+          logradouro: address.logradouro,
+          numero: address.numero,
+          complemento: address.complemento,
+          bairro: address.bairro,
+          cidade: address.cidade,
+          uf: address.uf,
+          paymentDescription: 'Mercado Pago',
+          paymentStatus: 'aguardando_pagamento',
+        });
+        for (const item of items) repositories.orders.insertItem(order.pk_id, item);
+        return order;
+      });
+      const order = createPendingOrder();
+
+      try {
+        const result = await mercadoPagoService.createPreference({
+          items: items.map((item) => ({
+            id: String(item.fk_produto),
+            title: item.nome,
+            currency_id: 'BRL',
+            quantity: item.quantidade,
+            unit_price: item.preco_centavos / 100,
+          })),
+          shipments: { cost: SHIPPING_IN_CENTS / 100, mode: 'not_specified' },
+          external_reference: `pedido:${order.pk_id}`,
+        });
+        repositories.orders.setMercadoPagoPreference(order.pk_id, result.preference_id);
+        return result;
+      } catch (error) {
+        repositories.orders.deleteMercadoPagoPending(order.pk_id);
+        throw error;
+      }
+    },
+
+    async processWebhook({ dataId, type, xRequestId, xSignature }) {
+      if (type !== 'payment' || !dataId) return { ignored: true };
+      mercadoPagoService.validateWebhook({
+        dataId,
+        secret: mercadoPagoWebhookSecret,
+        xRequestId,
+        xSignature,
+      });
+      const payment = await mercadoPagoService.getPayment(dataId);
+      const match = /^pedido:(\d+)$/.exec(payment.external_reference ?? '');
+      if (!match) throw new AppError('Pagamento sem pedido local válido.', { statusCode: 422 });
+      const order = repositories.orders.findById(Number(match[1]));
+      if (!order || !order.mercado_pago_preference_id) throw notFound('Pedido');
+      const preferenceId = payment.preference_id ?? payment.metadata?.preference_id;
+      const totalInCents = Math.round(Number(payment.transaction_amount) * 100);
+      if (
+        (preferenceId && preferenceId !== order.mercado_pago_preference_id) ||
+        payment.currency_id !== 'BRL' ||
+        totalInCents !== order.total_centavos
+      ) {
+        throw new AppError('Pagamento não corresponde ao pedido.', {
+          statusCode: 422,
+          code: 'PAGAMENTO_DIVERGENTE',
+        });
+      }
+      const transition = MERCADO_PAGO_STATUS[payment.status];
+      if (!transition) return { ignored: true };
+      repositories.orders.updateMercadoPagoPayment(order.pk_id, {
+        paymentId: payment.id,
+        paymentStatus: transition,
+      });
+      return { ignored: false };
+    },
+  };
+
   const favorites = {
     list(userId) {
       return repositories.customers.listFavorites(userId).map(mapProduct);
@@ -341,6 +453,7 @@ export function createServices({ database, repositories, sessionDurationDays }) 
       cidade: address.cidade,
       uf: address.uf,
       paymentDescription: `${paymentMethod.bandeira} final ${paymentMethod.ultimos_digitos}`,
+      paymentStatus: 'nao_aplicavel',
     });
 
     for (const item of items) repositories.orders.insertItem(order.pk_id, item);
@@ -386,5 +499,5 @@ export function createServices({ database, repositories, sessionDurationDays }) 
     },
   };
 
-  return { addresses, auth, carts, catalog, favorites, orders, payments, users };
+  return { addresses, auth, carts, catalog, favorites, mercadoPago, orders, payments, users };
 }

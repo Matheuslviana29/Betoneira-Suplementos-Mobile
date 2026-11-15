@@ -73,6 +73,7 @@ export function mapOrder(row, items = []) {
   return {
     id: row.pk_id,
     status: row.status,
+    statusPagamento: row.status_pagamento,
     subtotalCentavos: row.subtotal_centavos,
     freteCentavos: row.frete_centavos,
     totalCentavos: row.total_centavos,

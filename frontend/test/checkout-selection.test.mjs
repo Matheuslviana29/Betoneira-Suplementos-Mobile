@@ -7,14 +7,15 @@ const checkoutPath = fileURLToPath(
   new URL('../src/features/checkout/screens/TelaCheckout.js', import.meta.url),
 );
 
-test('contrato atual envia os IDs de endereço e pagamento ao criar o pedido', async () => {
+test('checkout cria a preferência somente com o endereço selecionado', async () => {
   const source = await readFile(checkoutPath, 'utf8');
   assert.match(
     source,
-    /api\.pedidos\.criar\(\{\s*enderecoId: selectedAddressId,\s*formaPagamentoId: selectedPaymentId,\s*\}\)/,
+    /api\.mercadoPago\.criarPreferencia\(\s*selectedAddressId,?\s*\)/,
   );
-  assert.doesNotMatch(source, /enderecoId: endereco\.id/);
-  assert.doesNotMatch(source, /formaPagamentoId: pagamento\.id/);
+  assert.doesNotMatch(source, /api\.pedidos\.criar/);
+  assert.doesNotMatch(source, /formaPagamentoId/);
+  assert.match(source, /Linking\.openURL\(initPoint\)/);
 });
 
 test('modelo de seleção inicial prioriza endereço principal e primeiro pagamento', () => {
@@ -37,16 +38,15 @@ test('checkout inicializa a seleção apenas uma vez durante a instância do flu
   const source = await readFile(checkoutPath, 'utf8');
   assert.match(source, /const selecaoInicializada = useRef\(false\)/);
   assert.match(source, /selecaoInicializada\.current\) return/);
-  assert.match(source, /initializeSelection\(enderecos, pagamentos\)/);
+  assert.match(source, /initializeSelection\(enderecos, \[\]\)/);
   assert.match(source, /selecaoInicializada\.current = true/);
 });
 
-test('checkout bloqueia confirmação e orienta quando falta seleção', async () => {
+test('checkout exige apenas endereço e explica que o pagamento será escolhido no Mercado Pago', async () => {
   const source = await readFile(checkoutPath, 'utf8');
-  assert.match(
-    source,
-    /itens\.length === 0 \|\| selectedAddressId === null \|\| selectedPaymentId === null/,
-  );
+  assert.match(source, /itens\.length === 0 \|\| selectedAddressId === null/);
   assert.match(source, /accessibilityLiveRegion="polite"/);
-  assert.match(source, /Selecione um endereço e uma forma de pagamento/);
+  assert.match(source, /Selecione um endereço para continuar com o pagamento/);
+  assert.match(source, /O método de pagamento será escolhido no Mercado Pago\./);
+  assert.match(source, /PAGAR COM MERCADO PAGO/);
 });

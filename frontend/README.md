@@ -61,8 +61,26 @@ node --test test/import-contract.test.mjs
 - checkout com seleção explícita;
 - criação e consulta de pedidos.
 
+### Mercado Pago Checkout Pro (MVP acadêmico)
+
+No checkout, o botão **Pagar com Mercado Pago** solicita ao backend uma preferência e abre o
+`init_point` com `Linking.openURL`. O método de pagamento é escolhido no ambiente hospedado do
+Mercado Pago; nenhum Access Token, número de cartão ou CVV passa pelo aplicativo.
+
+Ao iniciar o pagamento, o backend cria o pedido com status financeiro `aguardando_pagamento`.
+O retorno do navegador não confirma pagamento: a atualização para aprovado, recusado ou
+cancelado depende de um webhook HTTPS público validado e de uma consulta autenticada do backend
+ao Mercado Pago. `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` existem somente em
+`backend/.env` e nunca devem ser expostos ao aplicativo ou enviados ao Git.
+
+Para o smoke manual, use credenciais de teste, selecione o endereço, pressione **Pagar com
+Mercado Pago** e conclua o checkout hospedado. As telas e formas de pagamento locais continuam
+preservadas.
+
 ## Limitações
 
 - recuperação de senha simulada;
 - cancelamento de pedido ainda sem interface;
 - smoke test de iOS ainda não realizado.
+- estoque e carrinho não são alterados após o pagamento;
+- não há fluxo automático de separação ou envio após a aprovação financeira.

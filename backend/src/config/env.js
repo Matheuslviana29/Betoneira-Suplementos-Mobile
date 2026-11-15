@@ -64,6 +64,8 @@ export const env = Object.freeze({
   databasePath: readDatabasePath(process.env.DATABASE_PATH),
   nodeEnvironment: readNodeEnvironment(process.env.NODE_ENV),
   port: readPort(process.env.PORT),
+  mercadoPagoAccessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN?.trim() || null,
+  mercadoPagoWebhookSecret: process.env.MERCADO_PAGO_WEBHOOK_SECRET?.trim() || null,
   sessionDurationDays: readPositiveInteger(
     process.env.SESSION_DURATION_DAYS,
     DEFAULT_SESSION_DURATION_DAYS,

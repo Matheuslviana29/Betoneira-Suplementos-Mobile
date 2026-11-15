@@ -153,3 +153,9 @@ export const orderSchema = z.object({
   enderecoId: z.number().int().positive(),
   formaPagamentoId: z.number().int().positive(),
 });
+
+export const mercadoPagoPreferenceSchema = z
+  .object({
+    enderecoId: z.number().int().positive(),
+  })
+  .strict();

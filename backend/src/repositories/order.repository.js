@@ -25,15 +25,53 @@ export function createOrderRepository(database) {
             fk_usuario, fk_endereco, fk_forma_pagamento, status,
             subtotal_centavos, frete_centavos, total_centavos,
             destinatario, cep, logradouro, numero, complemento, bairro, cidade, uf,
-            pagamento_descricao
+            pagamento_descricao, status_pagamento
           ) VALUES (
             @userId, @addressId, @paymentMethodId, 'aguardando_pagamento',
             @subtotal, @shipping, @total,
             @destinatario, @cep, @logradouro, @numero, @complemento, @bairro, @cidade, @uf,
-            @paymentDescription
+            @paymentDescription, @paymentStatus
           ) RETURNING *
         `)
         .get(data);
+    },
+
+    findById(id) {
+      return database.prepare('SELECT * FROM pedidos WHERE pk_id = ?').get(id);
+    },
+
+    setMercadoPagoPreference(orderId, preferenceId) {
+      return database
+        .prepare(`
+          UPDATE pedidos
+          SET mercado_pago_preference_id = ?, atualizado_em = CURRENT_TIMESTAMP
+          WHERE pk_id = ? AND mercado_pago_preference_id IS NULL
+        `)
+        .run(preferenceId, orderId);
+    },
+
+    deleteMercadoPagoPending(orderId) {
+      return database
+        .prepare(`
+          DELETE FROM pedidos
+          WHERE pk_id = ?
+            AND status = 'aguardando_pagamento'
+            AND status_pagamento = 'aguardando_pagamento'
+            AND mercado_pago_preference_id IS NULL
+        `)
+        .run(orderId);
+    },
+
+    updateMercadoPagoPayment(orderId, { paymentId, paymentStatus }) {
+      return database
+        .prepare(`
+          UPDATE pedidos
+          SET status_pagamento = ?, mercado_pago_payment_id = ?,
+              atualizado_em = CURRENT_TIMESTAMP
+          WHERE pk_id = ?
+            AND status_pagamento <> 'pago_aguardando_envio'
+        `)
+        .run(paymentStatus, String(paymentId), orderId);
     },
 
     insertItem(orderId, item) {

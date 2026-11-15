@@ -83,6 +83,25 @@ export function createControllers(services) {
       },
     },
 
+    mercadoPago: {
+      createPreference: async (request, response) => {
+        const result = await services.mercadoPago.createPreference(
+          request.auth.userId,
+          request.validated.body,
+        );
+        response.status(201).json({ dados: result });
+      },
+      webhook: async (request, response) => {
+        await services.mercadoPago.processWebhook({
+          dataId: String(request.query['data.id'] ?? request.body?.data?.id ?? ''),
+          type: String(request.query.type ?? request.body?.type ?? ''),
+          xRequestId: request.get('x-request-id'),
+          xSignature: request.get('x-signature'),
+        });
+        response.status(200).json({ recebido: true });
+      },
+    },
+
     favorites: {
       list: (request, response) => {
         response.json({ dados: services.favorites.list(request.auth.userId) });

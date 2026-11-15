@@ -31,6 +31,17 @@ cd ..\frontend
 npm.cmd ci
 ```
 
+Antes de iniciar o backend, crie o arquivo local de ambiente a partir do exemplo:
+
+```powershell
+Copy-Item backend\.env.example backend\.env
+```
+
+Preencha manualmente `MERCADO_PAGO_ACCESS_TOKEN` em `backend/.env` com uma credencial de teste.
+Quando for testar a atualização automática do pedido, configure também
+`MERCADO_PAGO_WEBHOOK_SECRET` no mesmo arquivo. O Access Token e o segredo pertencem somente ao
+backend; nunca use variáveis `EXPO_PUBLIC_*` para eles e nunca envie arquivos `.env` ao Git.
+
 ## Executar
 
 Abra dois terminais.
@@ -98,11 +109,18 @@ O banco é local e fica em `backend/data/database.sqlite`. Ele é ignorado pelo 
 - endereços e formas de pagamento;
 - seleção explícita de endereço e pagamento no checkout;
 - criação, histórico e detalhes de pedidos.
+- demonstração acadêmica do Mercado Pago Checkout Pro, com preferência criada no backend e
+  abertura do checkout hospedado pelo aplicativo;
+- pedido Mercado Pago iniciado como `aguardando_pagamento`, com atualização financeira por
+  webhook HTTPS público validado pelo backend.
 
 ## Limitações atuais
 
 - recuperação de senha simulada;
 - cancelamento de pedido disponível na API, mas ainda sem interface;
 - smoke test de iOS ainda não realizado.
+- o Mercado Pago cria um pedido pendente e atualiza seu status financeiro por webhook assinado;
+  como limitação acadêmica, estoque e carrinho permanecem intactos mesmo após aprovação.
+- não existe fluxo automático de separação ou envio após a aprovação financeira.
 
 Veja também [frontend/README.md](frontend/README.md) e [backend/README.md](backend/README.md).

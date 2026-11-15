@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from 'toastify-react-native';
 
@@ -15,7 +15,7 @@ import { cores, dimensoes, fontes } from '../../../constants/tema';
 import { useConsultaAoFocar } from '../../../hooks/useConsultaAoFocar';
 import { api } from '../../../services/api';
 import { formatarMoeda } from '../../../utils/carrinho';
-import { adaptarCarrinho, adaptarEndereco, adaptarPagamento } from '../../../utils/dadosApi';
+import { adaptarCarrinho, adaptarEndereco } from '../../../utils/dadosApi';
 import { useCheckoutSelection } from '../CheckoutSelectionContext';
 
 const estadoInicial = {
@@ -24,42 +24,34 @@ const estadoInicial = {
     resumo: { freteCentavos: 0, quantidadeItens: 0, subtotalCentavos: 0, totalCentavos: 0 },
   },
   enderecos: [],
-  pagamentos: [],
 };
 
 async function carregarCheckout() {
-  const [cart, addresses, payments] = await Promise.all([
+  const [cart, addresses] = await Promise.all([
     api.carrinho.obter(),
     api.enderecos.listar(),
-    api.pagamentos.listar(),
   ]);
   return {
     carrinho: adaptarCarrinho(cart),
     enderecos: addresses.map(adaptarEndereco),
-    pagamentos: payments.map(adaptarPagamento),
   };
 }
 
 export default function TelaCheckout() {
   const roteador = useRouter();
   const { carregando, dados, erro } = useConsultaAoFocar(carregarCheckout, estadoInicial);
-  const {
-    initializeSelection,
-    selectedAddressId,
-    selectedPaymentId,
-  } = useCheckoutSelection();
+  const { initializeSelection, selectedAddressId } = useCheckoutSelection();
   const selecaoInicializada = useRef(false);
   const [confirmando, setConfirmando] = useState(false);
-  const { carrinho, enderecos, pagamentos } = dados;
+  const { carrinho, enderecos } = dados;
   const { itens, resumo } = carrinho;
   const endereco = enderecos.find((item) => item.id === selectedAddressId) ?? null;
-  const pagamento = pagamentos.find((item) => item.id === selectedPaymentId) ?? null;
 
   useEffect(() => {
     if (carregando || erro || selecaoInicializada.current) return;
-    initializeSelection(enderecos, pagamentos);
+    initializeSelection(enderecos, []);
     selecaoInicializada.current = true;
-  }, [carregando, enderecos, erro, initializeSelection, pagamentos]);
+  }, [carregando, enderecos, erro, initializeSelection]);
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -70,16 +62,14 @@ export default function TelaCheckout() {
     roteador.replace('/carrinho');
   };
 
-  const confirmarPedido = async () => {
-    if (selectedAddressId === null || selectedPaymentId === null) return;
+  const pagarComMercadoPago = async () => {
+    if (selectedAddressId === null) return;
     try {
       setConfirmando(true);
-      await api.pedidos.criar({
-        enderecoId: selectedAddressId,
-        formaPagamentoId: selectedPaymentId,
-      });
-      Toast.success('Pedido realizado com sucesso.');
-      roteador.replace('/pedidos');
+      const { init_point: initPoint } = await api.mercadoPago.criarPreferencia(
+        selectedAddressId,
+      );
+      await Linking.openURL(initPoint);
     } catch (error) {
       Toast.error(error.message);
     } finally {
@@ -105,9 +95,9 @@ export default function TelaCheckout() {
       >
         <View style={estilos.conteudo}>
           <Text style={estilos.instrucao}>Revise os dados antes de confirmar o pedido.</Text>
-          {selectedAddressId === null || selectedPaymentId === null ? (
+          {selectedAddressId === null ? (
             <Text accessibilityLiveRegion="polite" style={estilos.orientacaoSelecao}>
-              Selecione um endereço e uma forma de pagamento para confirmar o pedido.
+              Selecione um endereço para continuar com o pagamento.
             </Text>
           ) : null}
 
@@ -128,24 +118,15 @@ export default function TelaCheckout() {
             </View>
           </SecaoCheckout>
 
-          <SecaoCheckout
-            aoAlterar={() => roteador.push('/forma-pagamento')}
-            titulo="Forma de pagamento"
-          >
+          <SecaoCheckout titulo="Pagamento">
             <View style={estilos.opcaoSelecionada}>
               <View style={estilos.iconeOpcao}>
                 <Feather color={cores.laranja} name="credit-card" size={18} />
               </View>
               <View style={estilos.dadosOpcao}>
-                <Text style={estilos.tituloOpcao}>
-                  {pagamento
-                    ? `${pagamento.bandeira} •••• ${pagamento.ultimosDigitos}`
-                    : 'Nenhuma forma de pagamento'}
-                </Text>
+                <Text style={estilos.tituloOpcao}>Mercado Pago</Text>
                 <Text style={estilos.descricaoOpcao}>
-                  {pagamento
-                    ? `Validade: ${pagamento.validade}`
-                    : 'Cadastre uma forma de pagamento para continuar.'}
+                  O método de pagamento será escolhido no Mercado Pago.
                 </Text>
               </View>
             </View>
@@ -182,12 +163,10 @@ export default function TelaCheckout() {
           </View>
           <BotaoPrincipal
             carregando={confirmando}
-            desabilitado={
-              itens.length === 0 || selectedAddressId === null || selectedPaymentId === null
-            }
-            aoPressionar={confirmarPedido}
+            desabilitado={itens.length === 0 || selectedAddressId === null}
+            aoPressionar={pagarComMercadoPago}
           >
-            CONFIRMAR PEDIDO
+            PAGAR COM MERCADO PAGO
           </BotaoPrincipal>
         </View>
       </View>

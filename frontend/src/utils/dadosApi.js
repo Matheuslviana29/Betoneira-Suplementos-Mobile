@@ -56,8 +56,19 @@ const statusPedido = {
   cancelado: ['Cancelado', '#667085', '#475467'],
 };
 
+const statusPagamentoPedido = {
+  aguardando_pagamento: ['Aguardando pagamento', '#FF7900', '#C65E00'],
+  pago_aguardando_envio: ['Pagamento aprovado — aguardando envio', '#1570EF', '#175CD3'],
+  recusado: ['Pagamento recusado', '#D92D20', '#B42318'],
+  cancelado: ['Pagamento cancelado', '#667085', '#475467'],
+};
+
 export function adaptarPedido(pedido) {
-  const [status, corStatus, corTextoStatus] = statusPedido[pedido.status] ?? [
+  const statusVisual =
+    pedido.statusPagamento && pedido.statusPagamento !== 'nao_aplicavel'
+      ? statusPagamentoPedido[pedido.statusPagamento]
+      : statusPedido[pedido.status];
+  const [status, corStatus, corTextoStatus] = statusVisual ?? [
     pedido.status,
     '#667085',
     '#475467',

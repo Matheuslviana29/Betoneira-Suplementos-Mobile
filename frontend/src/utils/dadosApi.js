@@ -48,7 +48,11 @@ export function adaptarPagamento(pagamento) {
 }
 
 const statusPedido = {
-  aguardando_pagamento: ['Aguardando pagamento', '#FF7900', '#C65E00'],
+  aguardando_pagamento: [
+    'Pagamento iniciado — aguardando confirmação no Mercado Pago',
+    '#FF7900',
+    '#C65E00',
+  ],
   pago: ['Pago', '#1570EF', '#175CD3'],
   em_separacao: ['Em separação', '#7F56D9', '#6941C6'],
   enviado: ['Enviado', '#FF7900', '#C65E00'],

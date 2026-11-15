@@ -15,6 +15,7 @@ test('checkout cria a preferência somente com o endereço selecionado', async (
   );
   assert.doesNotMatch(source, /api\.pedidos\.criar/);
   assert.doesNotMatch(source, /formaPagamentoId/);
+  assert.match(source, /roteador\.replace\('\/pedidos'\)[\s\S]*Linking\.openURL\(initPoint\)/);
   assert.match(source, /Linking\.openURL\(initPoint\)/);
 });
 

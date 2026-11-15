@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BarraNavegacaoInferior } from '../../../components/BarraNavegacaoInferior';
@@ -15,7 +15,10 @@ const carregarPedidos = async () => (await api.pedidos.listar()).map(adaptarPedi
 
 export function TelaPedidos() {
   const roteador = useRouter();
-  const { dados: pedidos, erro } = useConsultaAoFocar(carregarPedidos, []);
+  const { carregando, dados: pedidos, erro, recarregar } = useConsultaAoFocar(
+    carregarPedidos,
+    [],
+  );
 
   const voltar = () => {
     if (roteador.canGoBack()) {
@@ -43,6 +46,23 @@ export function TelaPedidos() {
         style={estilos.rolagem}
       >
         <View style={estilos.lista}>
+          <Pressable
+            accessibilityLabel={carregando ? 'Atualizando pedidos' : 'Atualizar pedidos'}
+            accessibilityRole="button"
+            accessibilityState={{ busy: carregando, disabled: carregando }}
+            disabled={carregando}
+            onPress={recarregar}
+            style={({ pressed }) => [
+              estilos.botaoAtualizar,
+              pressed && !carregando ? estilos.botaoAtualizarPressionado : null,
+            ]}
+          >
+            {carregando ? (
+              <ActivityIndicator color={cores.laranja} size="small" />
+            ) : (
+              <Text style={estilos.textoAtualizar}>Atualizar pedidos</Text>
+            )}
+          </Pressable>
           {pedidos.map((pedido) => (
             <CartaoPedido key={pedido.id} pedido={pedido} />
           ))}
@@ -99,5 +119,23 @@ const estilos = StyleSheet.create({
   },
   areaNavegacao: {
     backgroundColor: cores.fundo,
+  },
+  botaoAtualizar: {
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    borderColor: cores.laranja,
+    borderRadius: 8,
+    borderWidth: 1,
+    justifyContent: 'center',
+    minHeight: 40,
+    paddingHorizontal: 16,
+  },
+  botaoAtualizarPressionado: {
+    opacity: 0.7,
+  },
+  textoAtualizar: {
+    color: cores.laranja,
+    fontFamily: fontes.seminegrito,
+    fontSize: 10,
   },
 });

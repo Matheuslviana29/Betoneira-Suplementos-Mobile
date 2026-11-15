@@ -69,6 +69,7 @@ export default function TelaCheckout() {
       const { init_point: initPoint } = await api.mercadoPago.criarPreferencia(
         selectedAddressId,
       );
+      roteador.replace('/pedidos');
       await Linking.openURL(initPoint);
     } catch (error) {
       Toast.error(error.message);

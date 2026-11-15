@@ -31,16 +31,17 @@ cd ..\frontend
 npm.cmd ci
 ```
 
-Antes de iniciar o backend, crie o arquivo local de ambiente a partir do exemplo:
+Antes de iniciar o backend, entre na pasta e crie o arquivo local de ambiente a partir do exemplo:
 
 ```powershell
-Copy-Item backend\.env.example backend\.env
+cd ..\backend
+Copy-Item .env.example .env
 ```
 
-Preencha manualmente `MERCADO_PAGO_ACCESS_TOKEN` em `backend/.env` com uma credencial de teste.
-Quando for testar a atualização automática do pedido, configure também
-`MERCADO_PAGO_WEBHOOK_SECRET` no mesmo arquivo. O Access Token e o segredo pertencem somente ao
-backend; nunca use variáveis `EXPO_PUBLIC_*` para eles e nunca envie arquivos `.env` ao Git.
+`MERCADO_PAGO_ACCESS_TOKEN` só é necessário para testar o Checkout Pro. Obtenha o Access Token
+em **Mercado Pago Developers → Integrações → sua aplicação Checkout Pro → Credenciais de teste**
+e preencha-o manualmente em `backend/.env`. O token fica somente no backend: nunca o coloque no
+frontend, GitHub, logs ou mensagens e nunca compartilhe o arquivo `.env`.
 
 ## Executar
 
@@ -90,6 +91,21 @@ node --test test/router-contract.test.mjs
 node --test test/import-contract.test.mjs
 ```
 
+## Testar o Checkout Pro
+
+1. Crie uma conta e uma aplicação Checkout Pro no Mercado Pago Developers.
+2. Configure o Access Token de teste somente em `backend/.env`.
+3. Inicie primeiro o backend e depois o frontend.
+4. No aplicativo, crie uma conta, adicione produtos ao carrinho e cadastre um endereço.
+5. Pressione **PAGAR COM MERCADO PAGO** e use um comprador ou cartão de teste oficial.
+6. Volte ao aplicativo e encontre o pedido em `/pedidos`.
+7. Use **Atualizar pedidos** para recarregar a lista local.
+
+Nesta demonstração o pagamento não é confirmado automaticamente. O pedido permanece como
+**Pagamento iniciado — aguardando confirmação no Mercado Pago**; estoque e carrinho não são
+modificados. O webhook existente pode ser configurado futuramente, mas não é necessário para
+instalar, executar ou apresentar o projeto.
+
 ## Dados locais
 
 O banco é local e fica em `backend/data/database.sqlite`. Ele é ignorado pelo Git. Usuários, carrinhos, endereços e pedidos existem somente no computador que está executando o backend.
@@ -111,16 +127,19 @@ O banco é local e fica em `backend/data/database.sqlite`. Ele é ignorado pelo 
 - criação, histórico e detalhes de pedidos.
 - demonstração acadêmica do Mercado Pago Checkout Pro, com preferência criada no backend e
   abertura do checkout hospedado pelo aplicativo;
-- pedido Mercado Pago iniciado como `aguardando_pagamento`, com atualização financeira por
-  webhook HTTPS público validado pelo backend.
+- pedido Mercado Pago iniciado como `aguardando_pagamento`, sem confirmação automática ou
+  manual nesta demonstração;
+- após iniciar o pagamento, o aplicativo seleciona `/pedidos`, abre o Checkout Pro e permite
+  recarregar apenas a lista local com **Atualizar pedidos**.
 
 ## Limitações atuais
 
 - recuperação de senha simulada;
 - cancelamento de pedido disponível na API, mas ainda sem interface;
 - smoke test de iOS ainda não realizado.
-- o Mercado Pago cria um pedido pendente e atualiza seu status financeiro por webhook assinado;
-  como limitação acadêmica, estoque e carrinho permanecem intactos mesmo após aprovação.
+- na demonstração acadêmica, o pedido permanece pendente e não há confirmação automática ou
+  manual do pagamento; estoque e carrinho permanecem intactos.
 - não existe fluxo automático de separação ou envio após a aprovação financeira.
+- o webhook permanece no código como melhoria futura, mas não precisa ser configurado nesta etapa.
 
 Veja também [frontend/README.md](frontend/README.md) e [backend/README.md](backend/README.md).

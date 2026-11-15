@@ -27,8 +27,10 @@ A API ficará disponível em `http://localhost:3333`. O backend usa `node:sqlite
 
 O SDK oficial `mercadopago` fica somente neste backend. Copie `backend/.env.example` para
 `backend/.env` e substitua o placeholder de `MERCADO_PAGO_ACCESS_TOKEN` pelo Access Token de
-teste da sua aplicação Mercado Pago. Nunca use uma variável `EXPO_PUBLIC_*`, nunca coloque o
-token no frontend e não versione o arquivo `.env`.
+teste obtido em **Mercado Pago Developers → Integrações → sua aplicação Checkout Pro →
+Credenciais de teste**. Essa variável só é necessária para testar o Checkout Pro. Nunca use uma
+variável `EXPO_PUBLIC_*`, nunca coloque o token no frontend, GitHub, logs ou mensagens e nunca
+compartilhe ou versione o arquivo `.env`.
 
 Use uma conta e credenciais de teste do Mercado Pago para validar o botão **Pagar com Mercado
 Pago**. Não coloque Access Token, assinatura de webhook ou qualquer credencial real em comandos,
@@ -39,17 +41,14 @@ O endpoint autenticado `POST /api/v1/pagamentos/mercado-pago/preferencia` recebe
 A resposta expõe somente `init_point` e `preference_id`.
 
 Ao iniciar o Checkout Pro, a API cria um pedido local com status financeiro
-`aguardando_pagamento`. Configure também `MERCADO_PAGO_WEBHOOK_SECRET` somente em
-`backend/.env`. No painel do Mercado Pago, habilite o evento **Pagamentos** para uma URL HTTPS
-pública terminada em `/api/v1/webhooks/mercado-pago`.
+`aguardando_pagamento`. O retorno visual do navegador nunca confirma pagamento. O endpoint de
+webhook validado permanece no código para evolução futura, mas não é configurado nem necessário
+para esta demonstração.
 
-Em desenvolvimento, exponha temporariamente a porta `3333` com um túnel HTTPS de sua escolha,
-sem adicioná-lo às dependências do projeto. O backend valida a assinatura, consulta o pagamento
-pelo SDK e só então atualiza o pedido. O retorno visual do navegador nunca confirma pagamento.
-
-Limitação acadêmica: o fluxo Mercado Pago não baixa ou reserva estoque e não limpa, converte ou
-altera o carrinho, inclusive após aprovação. A aprovação também não inicia automaticamente
-separação ou envio.
+Limitação acadêmica: nesta demonstração, o pedido permanece como `aguardando_pagamento`; não há
+consulta manual ou confirmação automática. O fluxo não baixa ou reserva estoque, não altera o
+carrinho e não inicia automaticamente separação ou envio. O webhook permanece disponível como
+melhoria futura, sem configuração obrigatória nesta etapa.
 
 ## Banco local
 
@@ -65,6 +64,11 @@ Não versione arquivos de ambiente, credenciais, dados pessoais, senhas ou token
 npm.cmd test
 npm.cmd run db:check
 ```
+
+Para o smoke do Checkout Pro, inicie o backend antes do frontend, adicione produtos e endereço
+no aplicativo, pressione **PAGAR COM MERCADO PAGO** e use um comprador ou cartão de teste
+oficial. Ao voltar, o pedido estará em `/pedidos` como pendente. **Atualizar pedidos** apenas
+recarrega a lista local; não consulta nem confirma o pagamento.
 
 ## Arquitetura
 

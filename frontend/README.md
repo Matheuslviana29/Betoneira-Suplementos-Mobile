@@ -12,6 +12,10 @@ npm.cmd ci
 ```
 
 Cada pasta do repositório é um projeto separado; este frontend possui seu próprio `package.json`.
+Para testar o Checkout Pro, configure antes `MERCADO_PAGO_ACCESS_TOKEN` somente em
+`backend/.env`, usando uma credencial de teste obtida em **Mercado Pago Developers → Integrações
+→ sua aplicação Checkout Pro → Credenciais de teste**. Nunca coloque o token no frontend,
+GitHub, logs ou mensagens e nunca o compartilhe.
 
 ## Executar
 
@@ -63,24 +67,25 @@ node --test test/import-contract.test.mjs
 
 ### Mercado Pago Checkout Pro (MVP acadêmico)
 
-No checkout, o botão **Pagar com Mercado Pago** solicita ao backend uma preferência e abre o
-`init_point` com `Linking.openURL`. O método de pagamento é escolhido no ambiente hospedado do
-Mercado Pago; nenhum Access Token, número de cartão ou CVV passa pelo aplicativo.
+No checkout, o botão **Pagar com Mercado Pago** solicita ao backend uma preferência, navega para
+`/pedidos` e abre o `init_point` com `Linking.openURL`. Ao voltar do navegador ou aplicativo
+externo, a tela de pedidos já está selecionada. O método de pagamento é escolhido no ambiente
+hospedado do Mercado Pago; nenhum Access Token, número de cartão ou CVV passa pelo aplicativo.
 
 Ao iniciar o pagamento, o backend cria o pedido com status financeiro `aguardando_pagamento`.
-O retorno do navegador não confirma pagamento: a atualização para aprovado, recusado ou
-cancelado depende de um webhook HTTPS público validado e de uma consulta autenticada do backend
-ao Mercado Pago. `MERCADO_PAGO_ACCESS_TOKEN` e `MERCADO_PAGO_WEBHOOK_SECRET` existem somente em
-`backend/.env` e nunca devem ser expostos ao aplicativo ou enviados ao Git.
+Nesta demonstração, o retorno do navegador não confirma nem altera o pagamento. A tela mostra
+**Pagamento iniciado — aguardando confirmação no Mercado Pago** e **Atualizar pedidos** apenas
+recarrega os dados locais. O webhook permanece no código como melhoria futura.
 
-Para o smoke manual, use credenciais de teste, selecione o endereço, pressione **Pagar com
-Mercado Pago** e conclua o checkout hospedado. As telas e formas de pagamento locais continuam
-preservadas.
+Para o smoke manual, crie uma conta/aplicação Checkout Pro, configure o Access Token de teste no
+backend, inicie backend e frontend, adicione produtos e endereço e pressione **PAGAR COM MERCADO
+PAGO**. Use um comprador ou cartão de teste oficial, volte ao app, encontre o pedido em
+`/pedidos` e pressione **Atualizar pedidos** para recarregar a lista local.
 
 ## Limitações
 
 - recuperação de senha simulada;
 - cancelamento de pedido ainda sem interface;
 - smoke test de iOS ainda não realizado.
-- estoque e carrinho não são alterados após o pagamento;
+- não há confirmação automática ou manual; estoque e carrinho não são alterados;
 - não há fluxo automático de separação ou envio após a aprovação financeira.
